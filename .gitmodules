@@ -1,0 +1,3 @@
+[submodule "python-libartnet"]
+	path = python-libartnet
+	url = git://github.com/fredriklindberg/python-libartnet.git
