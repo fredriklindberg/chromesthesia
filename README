@@ -1,0 +1,18 @@
+chromesthesia
+  a form of synesthesia in which nonvisual stimulation
+  results in the experience of color sensations.
+
+chromesthesia is a realtime sound analyzer and semi-beat detection
+system that generates DMX output via Artnet to light rigs based
+on the sound playing.
+The beat-dection is non-predictive and reacts directly to stimula.
+
+chromesthesia is a work in progress and created mostly for my own
+amusement.  And I don't really know what I'm doing, most of this
+is just trial and error :)
+
+Copyright (C) 2013 Fredrik Lindberg <fli@shapeshifter.se>
+
+chromesthesia comes with ABSOLUTELY NO WARRANTY. This is free software,
+and you are welcome to redistribute it under certain conditions;
+see the LICENSE file for details.
