@@ -55,6 +55,10 @@ def main(args):
     parser = OptionParser(usage="%prog [options] <config file>")
     parser.add_option("-s", "--scale", dest="scale", default=None,
                   help="Set scaling factor (overrides config)")
+    parser.add_option("-d", dest="debug",
+                  default=False, action="store_true",
+                  help="Debug output (very verbose)")
+
     (opts, args) = parser.parse_args()
 
     if len(args) == 0:
@@ -129,6 +133,10 @@ def main(args):
                 for l in lights:
                     l.update(is_beat, bass, mid, treble)
                 dp.send()
+
+            if opts.debug:
+                print "Bass: {:3d}, Mid: {:3d}, Treble: {:3d}".\
+                    format(bass, mid, treble)
 
     except KeyboardInterrupt:
         dp.reset();
