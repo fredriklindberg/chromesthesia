@@ -24,7 +24,7 @@ class SoundAnalyzer(object):
     _average = []
 
     def __init__(self, sample, chunk):
-        self._input = alsa.PCM(alsa.PCM_CAPTURE, alsa.PCM_NONBLOCK)
+        self._input = alsa.PCM(alsa.PCM_CAPTURE, alsa.PCM_NORMAL)
         self._input.setchannels(1)
         self._input.setrate(sample)
         self._input.setformat(alsa.PCM_FORMAT_S16_LE)
