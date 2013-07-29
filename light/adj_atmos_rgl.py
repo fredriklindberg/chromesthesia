@@ -68,11 +68,11 @@ class AdjAtmosRGL(Light):
     prev_mid = 0
     no_beat = 0
 
-    def update(self, is_beat, base, mid, treble):
+    def update(self, is_beat, bass, mid, treble):
 
         self.no_beat = self.no_beat + 1 if not is_beat else 0
 
-        if is_beat or base >= 240:
+        if is_beat or bass >= 240:
             self.data[0] |= self.RED
         else:
             self.data[0] &= ~self.RED
@@ -91,7 +91,7 @@ class AdjAtmosRGL(Light):
             elif mid <= 40:
                 self.data[0] &= ~self.GREEN
 
-        if (mid >= 1 and mid <= 40) or (base <= 10 and treble >= 10):
+        if (mid >= 1 and mid <= 40) or (bass <= 10 and treble >= 10):
             self.data[0] |= self.BLUE
         elif (mid == 0 and treble == 0) or mid >= 80:
             self.data[0] &= ~self.BLUE

@@ -104,7 +104,7 @@ def main(args):
     sa = SoundAnalyzer(sample, chunk)
 
     try:
-        prev_base = 0
+        prev_bass = 0
         is_beat = False
         start = time.time()
         while True:
@@ -113,21 +113,21 @@ def main(args):
 
             levels = sa.scaled(weights, scale, 256)
 
-            base = levels[0]
+            bass = levels[0]
             mid = int(np.mean(levels[1:4]))
             treble = int(np.mean(levels[5:7]))
 
             if (time.time() - start) >= 0.05:
-                delta = base - prev_base
-                if base >= 150 and delta >= 50:
+                delta = bass - prev_bass
+                if bass >= 150 and delta >= 50:
                     is_beat = True
                 else:
                     is_beat = False
-                prev_base = base
+                prev_bass = bass
                 start = time.time()
 
                 for l in lights:
-                    l.update(is_beat, base, mid, treble)
+                    l.update(is_beat, bass, mid, treble)
                 dp.send()
 
     except KeyboardInterrupt:

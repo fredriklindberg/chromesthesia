@@ -29,7 +29,7 @@ class Light(object):
             return eval(Light._lights[type])()
         return None
 
-    def update(self, is_beat, base, mid, treble):
+    def update(self, is_beat, bass, mid, treble):
         return None
 
     @property
