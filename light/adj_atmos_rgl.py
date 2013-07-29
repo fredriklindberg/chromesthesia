@@ -48,6 +48,8 @@ class AdjAtmosRGL(Light):
     speed = 0
     clockwise = True
 
+    no_beat = 0
+
     RED = 0x1
     GREEN = 0x2
     BLUE = 0x4
@@ -63,28 +65,42 @@ class AdjAtmosRGL(Light):
         RED | GREEN | BLUE: 188
     }
 
+    prev_mid = 0
+    no_beat = 0
+
     def update(self, is_beat, base, mid, treble):
+
+        self.no_beat = self.no_beat + 1 if not is_beat else 0
 
         if is_beat or base >= 240:
             self.data[0] |= self.RED
         else:
             self.data[0] &= ~self.RED
 
-        if mid >= 90:
-            self.data[0] |= self.GREEN
-        elif mid <= 40:
-            self.data[0] &= ~self.GREEN
+        mid_delta = mid - self.prev_mid
+        # Stribe green based on midrange activty if
+        # there is no distinctive bass beat.
+        if self.no_beat > 10:
+            if mid_delta >= 50 or mid >= 120:
+                self.data[0] |= self.GREEN
+            else:
+                self.data[0] &= ~self.GREEN
+        else:
+            if mid >= 90:
+                self.data[0] |= self.GREEN
+            elif mid <= 40:
+                self.data[0] &= ~self.GREEN
 
-        if mid >= 1 and mid <= 45:
+        if (mid >= 1 and mid <= 40) or (base <= 10 and treble >= 10):
             self.data[0] |= self.BLUE
-        elif mid == 0 or mid >= 80:
+        elif (mid == 0 and treble == 0) or mid >= 80:
             self.data[0] &= ~self.BLUE
 
+        # Try to do some exponential speed up for the rotation
+        speed = int((pow(mid, 1.5) / pow(256, 1.5)) * 110)
         if self.clockwise:
-            speed = int((mid / 384.0) * 110)
             self.data[1] = 135 + speed
         else:
-            speed = int((mid / 192.0) * 110)
             self.data[1] = abs(speed - 110) + 10
 
         self._port.set(self.channel, self.colormap[self.data[0]])
@@ -94,4 +110,4 @@ class AdjAtmosRGL(Light):
         if self.data[0] == 0:
             self.clockwise = True if random.randint(0,1) else False
 
-        return None
+        self.prev_mid = mid 
