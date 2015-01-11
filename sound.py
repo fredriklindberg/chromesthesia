@@ -14,7 +14,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
 
-import alsaaudio as alsa
+import pyaudio
 import numpy as np
 from struct import unpack
 
@@ -24,11 +24,10 @@ class SoundAnalyzer(object):
     _average = []
 
     def __init__(self, sample, chunk):
-        self._input = alsa.PCM(alsa.PCM_CAPTURE, alsa.PCM_NORMAL)
-        self._input.setchannels(1)
-        self._input.setrate(sample)
-        self._input.setformat(alsa.PCM_FORMAT_S16_LE)
-        self._input.setperiodsize(chunk)
+        p = pyaudio.PyAudio()
+        self._input = p.open(format=pyaudio.paInt16, input=True,
+            channels=1, rate=sample, frames_per_buffer=chunk)
+        self._chunk = chunk
 
         bands = []
         freq = sample
@@ -53,9 +52,7 @@ class SoundAnalyzer(object):
         return len(self._bands)
 
     def poll(self):
-        l,data = self._input.read()
-        if not l:
-            return False
+        data = self._input.read(self._chunk)
 
         # Convert raw to numpy array
         data = unpack("%dh" % (len(data) / 2), data)
