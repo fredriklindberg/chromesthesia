@@ -28,9 +28,7 @@ import time
 from optparse import OptionParser
 from ConfigParser import SafeConfigParser
 from sound import SoundAnalyzer
-sys.path.append('python-libartnet')
 from light import *
-from artnet import ArtnetController, DmxPort
 
 import numpy as np
 
@@ -80,10 +78,6 @@ def main(args):
     if opts.scale:
         scale = int(opts.scale)
 
-    ac = ArtnetController("chromesthesia")
-    dp = DmxPort(0, DmxPort.INPUT)
-    ac.add_port(dp)
-
     lights = []
     i = 1
     while True:
@@ -101,7 +95,6 @@ def main(args):
         l = Light.factory(type)
         if not l:
             continue
-        l.port = dp
         l.channel = chan
         lights.append(l)
 
@@ -132,15 +125,13 @@ def main(args):
 
                 for l in lights:
                     l.update(is_beat, bass, mid, treble)
-                dp.send()
 
             if opts.debug:
                 print "Bass: {:3d}, Mid: {:3d}, Treble: {:3d}".\
                     format(bass, mid, treble)
 
     except KeyboardInterrupt:
-        dp.reset();
-        dp.send()
+        pass
 
     return 0
 
