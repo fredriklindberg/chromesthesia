@@ -96,7 +96,7 @@ def main(args):
         l.channel = chan
         lights.append(l)
 
-    sa = SoundAnalyzer(sample, chunk)
+    sa = SoundAnalyzer(sample, chunk, scale)
     sa.start()
 
     try:
@@ -104,7 +104,7 @@ def main(args):
         is_beat = False
         start = time.time()
         while True:
-            levels = sa.scaled(scale, 256)
+            levels = sa.scaled()
 
             bass = levels[0]
             mid = int(np.mean(levels[1:4]))

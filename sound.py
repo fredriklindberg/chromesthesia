@@ -25,9 +25,12 @@ from multiprocessing import Process, Value, Pipe
 
 class SoundAnalyzer(object):
 
-    def __init__(self, sample, chunk):
+    _clip = 256
+
+    def __init__(self, sample, chunk, scale):
         self._chunk = chunk
         self._sample = sample
+        self._scale = scale
 
         bins = []
         freq = sample
@@ -110,13 +113,15 @@ class SoundAnalyzer(object):
                     spectrum[i] = 0
                 i = i + 1
 
+            spectrum = np.multiply(spectrum, self._eq)
+            spectrum = np.divide(spectrum, self._scale)
+            spectrum = spectrum.clip(0, self._clip)
+
+
             pipe.send(spectrum)
 
-    def scaled(self, scale, ceil):
-        tmp = self._pipe.recv()
-        tmp = np.multiply(tmp, self._eq)
-        tmp = np.divide(tmp, scale)
-        return tmp.clip(0, ceil)
+    def scaled(self):
+        return self._pipe.recv()
 
     @property
     def levels(self):
