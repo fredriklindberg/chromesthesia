@@ -28,11 +28,11 @@ class SoundAnalyzer(object):
         self._chunk = chunk
         self._sample = sample
 
-        bands = []
+        bins = []
         freq = sample
-        # Split sample rate into bands with an exponential decay
+        # Split sample rate into bins with an exponential decay
         # and 0-156 selected as the smallest band.  We calculate
-        # the mean power over these bands.
+        # the mean power over these bins.
         while freq > 156:
             prev_freq = freq
             freq = freq / 2
@@ -41,13 +41,13 @@ class SoundAnalyzer(object):
             prev_power_idx = 2 * chunk * prev_freq / sample
             power_idx = 2 * chunk * freq / sample
 
-            bands.insert(0, [power_idx, prev_power_idx])
+            bins.insert(0, [power_idx, prev_power_idx])
 
-        bands.insert(0, [0, (2 * chunk * freq / sample)])
-        self._bands = bands
+        bins.insert(0, [0, (2 * chunk * freq / sample)])
+        self._bins = bins
 
-    def bands(self):
-        return len(self._bands)
+    def bins(self):
+        return len(self._bins)
 
     def start(self):
         self._running = Value('i', 1)
@@ -72,7 +72,7 @@ class SoundAnalyzer(object):
         input = pa.open(format=pyaudio.paInt16, input=True,
             channels=1, rate=self._sample, frames_per_buffer=self._chunk)
 
-        spectrum = [0] * len(self._bands)
+        spectrum = [0] * len(self._bins)
 
         while running:
             try:
@@ -89,8 +89,8 @@ class SoundAnalyzer(object):
             power = np.abs(fourier)
 
             i = 0
-            for band in self._bands:
-                s,e = band
+            for bin in self._bins:
+                s,e = bin
                 try:
                     spectrum[i] = int(np.mean(power[s:e:1]))
                 except:
