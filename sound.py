@@ -90,6 +90,22 @@ class SoundAnalyzer(object):
 
         spectrum = [0] * len(self._bins)
 
+        bin_per_band = len(self._bins) / 3
+        bass_e = max(1, bin_per_band - 1) + 1
+        mid_e = bass_e + bin_per_band + 1
+
+        data = {
+            "bass" : {
+                "level" : 0
+            },
+            "mid" : {
+                "level" : 0
+            },
+            "tre" : {
+                "level" : 0
+            }
+        }
+
         while running:
             try:
                 frame = input.read(self._chunk)
@@ -117,8 +133,11 @@ class SoundAnalyzer(object):
             spectrum = np.divide(spectrum, self._scale)
             spectrum = spectrum.clip(0, self._clip)
 
+            data["bass"]["level"] = int(np.mean(spectrum[0:bass_e]))
+            data["mid"]["level"] = int(np.mean(spectrum[bass_e:mid_e]))
+            data["tre"]["level"] = int(np.mean(spectrum[mid_e:]))
 
-            pipe.send(spectrum)
+            pipe.send({"bins" : data, "spectrum" : spectrum})
 
     def scaled(self):
         return self._pipe.recv()

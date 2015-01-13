@@ -104,11 +104,11 @@ def main(args):
         is_beat = False
         start = time.time()
         while True:
-            levels = sa.scaled()
+            data = sa.scaled()
 
-            bass = levels[0]
-            mid = int(np.mean(levels[1:4]))
-            treble = int(np.mean(levels[5:7]))
+            bass = data["bins"]["bass"]["level"]
+            mid = data["bins"]["mid"]["level"]
+            treble = data["bins"]["tre"]["level"]
 
             if (time.time() - start) >= 0.05:
                 delta = bass - prev_bass
