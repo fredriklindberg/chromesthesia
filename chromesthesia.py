@@ -51,8 +51,6 @@ def get_cfg_list(config, section, variable, default):
 
 def main(args):
     parser = OptionParser(usage="%prog [options] <config file>")
-    parser.add_option("-s", "--scale", dest="scale", default=None,
-                  help="Set scaling factor (overrides config)")
     parser.add_option("-d", dest="debug",
                   default=False, action="store_true",
                   help="Debug output (very verbose)")
@@ -69,12 +67,8 @@ def main(args):
         print e
         return 1
 
-    scale = get_cfg_int(config, "global", "scale", 1000)
     sample = get_cfg_int(config, "global", "sample", 20000)
     chunk = get_cfg_int(config, "global", "chunk", 160)
-
-    if opts.scale:
-        scale = int(opts.scale)
 
     lights = []
     i = 1
@@ -96,7 +90,7 @@ def main(args):
         l.channel = chan
         lights.append(l)
 
-    sa = SoundAnalyzer(sample, chunk, scale)
+    sa = SoundAnalyzer(sample, chunk)
     sa.start()
 
     try:

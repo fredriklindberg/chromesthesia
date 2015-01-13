@@ -27,10 +27,9 @@ class SoundAnalyzer(object):
 
     _clip = 256
 
-    def __init__(self, sample, chunk, scale):
+    def __init__(self, sample, chunk):
         self._chunk = chunk
         self._sample = sample
-        self._scale = scale
 
         bins = []
         freq = sample
@@ -106,6 +105,10 @@ class SoundAnalyzer(object):
             }
         }
 
+        silence_thres = self._clip * 0.02
+        scale = 128
+        avg_loudness = 0
+
         while running:
             try:
                 frame = input.read(self._chunk)
@@ -130,12 +133,26 @@ class SoundAnalyzer(object):
                 i = i + 1
 
             spectrum = np.multiply(spectrum, self._eq)
-            spectrum = np.divide(spectrum, self._scale)
+            spectrum = np.divide(spectrum, scale)
             spectrum = spectrum.clip(0, self._clip)
 
             data["bass"]["level"] = int(np.mean(spectrum[0:bass_e]))
             data["mid"]["level"] = int(np.mean(spectrum[bass_e:mid_e]))
             data["tre"]["level"] = int(np.mean(spectrum[mid_e:]))
+
+            silence = data["bass"]["level"] <= silence_thres and \
+                data["mid"]["level"] <= silence_thres and \
+                data["tre"]["level"] <= silence_thres
+
+            loudness = int(((2*data["bass"]["level"]) + \
+                data["mid"]["level"] + data["tre"]["level"]) / 4)
+            avg_loudness = int((0.75 * avg_loudness) + (1.0 - 0.75) * loudness)
+
+            if not silence:
+                if avg_loudness >= (self._clip * 0.50):
+                    scale = scale + 2
+                elif avg_loudness <= (self._clip * 0.05) and scale >= 2:
+                    scale = scale - 1
 
             pipe.send({"bins" : data, "spectrum" : spectrum})
 
