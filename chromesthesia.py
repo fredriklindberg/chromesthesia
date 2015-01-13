@@ -99,15 +99,13 @@ def main(args):
         lights.append(l)
 
     sa = SoundAnalyzer(sample, chunk)
+    sa.start()
 
     try:
         prev_bass = 0
         is_beat = False
         start = time.time()
         while True:
-            if not sa.poll():
-                continue
-
             levels = sa.scaled(weights, scale, 256)
 
             bass = levels[0]
@@ -132,6 +130,8 @@ def main(args):
 
     except KeyboardInterrupt:
         pass
+
+    sa.stop()
 
     return 0
 

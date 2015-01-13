@@ -14,20 +14,19 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
 
+import sys
+import os
+import signal
 import pyaudio
 import numpy as np
 from struct import unpack
+from multiprocessing import Process, Value, Pipe
 
 class SoundAnalyzer(object):
 
-    _matrix = []
-    _average = []
-
     def __init__(self, sample, chunk):
-        p = pyaudio.PyAudio()
-        self._input = p.open(format=pyaudio.paInt16, input=True,
-            channels=1, rate=sample, frames_per_buffer=chunk)
         self._chunk = chunk
+        self._sample = sample
 
         bands = []
         freq = sample
@@ -46,40 +45,62 @@ class SoundAnalyzer(object):
 
         bands.insert(0, [0, (2 * chunk * freq / sample)])
         self._bands = bands
-        self._average = self._matrix = [0] * len(bands)
 
     def bands(self):
         return len(self._bands)
 
-    def poll(self):
-        data = self._input.read(self._chunk)
+    def start(self):
+        self._running = Value('i', 1)
+        self._pipe, pipe = Pipe(duplex=False)
 
-        # Convert raw to numpy array
-        data = unpack("%dh" % (len(data) / 2), data)
-        data = np.array(data, dtype='h')
+        self._p = Process(target=self._run, args=(self._running, pipe))
+        self._p.daemon = True
+        self._p.start()
+        pipe.close()
 
-        # Run numpy real FFT
-        fourier = np.fft.rfft(data)
-        power = np.abs(fourier)
+    def stop(self):
+        self._running.value = 0
+        self._p.terminate()
+        self._p.join()
 
-        i = 0
-        for band in self._bands:
-            s,e = band
+    def _run(self, running, pipe):
+        self._pipe.close()
+        self._pipe = pipe
+        signal.signal(signal.SIGINT, signal.SIG_IGN)
+
+        pa = pyaudio.PyAudio()
+        input = pa.open(format=pyaudio.paInt16, input=True,
+            channels=1, rate=self._sample, frames_per_buffer=self._chunk)
+
+        spectrum = [0] * len(self._bands)
+
+        while running:
             try:
-                self._matrix[i] = int(np.mean(power[s:e:1]))
+                data = input.read(self._chunk)
             except:
-                self._matrix[i] = 0
-            i = i + 1
+                continue
 
-        # Keep a weighted rolling average
-        self._average = np.divide(self._average, 2)
-        self._average = np.add(self._average, self._matrix)
-        self._average = np.divide(self._average, 2)
+            # Convert raw to numpy array
+            data = unpack("%dh" % (len(data) / 2), data)
+            data = np.array(data, dtype='h')
 
-        return True
+            # Run numpy real FFT
+            fourier = np.fft.rfft(data)
+            power = np.abs(fourier)
+
+            i = 0
+            for band in self._bands:
+                s,e = band
+                try:
+                    spectrum[i] = int(np.mean(power[s:e:1]))
+                except:
+                    spectrum[i] = 0
+                i = i + 1
+
+            pipe.send(spectrum)
 
     def scaled(self, weights, scale, ceil):
-        tmp = self._average
+        tmp = self._pipe.recv()
         tmp = np.multiply(tmp, weights)
         tmp = np.divide(tmp, scale)
         return tmp.clip(0, ceil)
