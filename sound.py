@@ -17,6 +17,7 @@
 import sys
 import os
 import signal
+import math
 import pyaudio
 import numpy as np
 from struct import unpack
@@ -45,6 +46,18 @@ class SoundAnalyzer(object):
 
         bins.insert(0, [0, (2 * chunk * freq / sample)])
         self._bins = bins
+
+        # Calculate EQ weights
+        # Start with power of 2 up to 64 and stretch to match number of bins
+        self._eq = []
+        eq = [1, 2, 4, 8, 16, 32, 64]
+        if len(eq) < len(self._bins):
+            ith = len(eq)/(len(self._bins) - len(eq))
+            for i in xrange(0, len(eq) - 1):
+                self._eq.append(eq[i])
+                if (i % ith) == 0:
+                    self._eq.append((eq[i] + eq[i+1]) / 2)
+            self._eq.append(eq[-1])
 
     def bins(self):
         return len(self._bins)
@@ -99,9 +112,9 @@ class SoundAnalyzer(object):
 
             pipe.send(spectrum)
 
-    def scaled(self, weights, scale, ceil):
+    def scaled(self, scale, ceil):
         tmp = self._pipe.recv()
-        tmp = np.multiply(tmp, weights)
+        tmp = np.multiply(tmp, self._eq)
         tmp = np.divide(tmp, scale)
         return tmp.clip(0, ceil)
 

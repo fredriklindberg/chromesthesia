@@ -72,8 +72,6 @@ def main(args):
     scale = get_cfg_int(config, "global", "scale", 1000)
     sample = get_cfg_int(config, "global", "sample", 20000)
     chunk = get_cfg_int(config, "global", "chunk", 160)
-    weights = get_cfg_list(config, "global", "weights", \
-        [1, 2, 8, 8, 16, 32, 64, 64])
 
     if opts.scale:
         scale = int(opts.scale)
@@ -106,7 +104,7 @@ def main(args):
         is_beat = False
         start = time.time()
         while True:
-            levels = sa.scaled(weights, scale, 256)
+            levels = sa.scaled(scale, 256)
 
             bass = levels[0]
             mid = int(np.mean(levels[1:4]))
