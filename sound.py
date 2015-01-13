@@ -92,16 +92,16 @@ class SoundAnalyzer(object):
 
         while running:
             try:
-                data = input.read(self._chunk)
+                frame = input.read(self._chunk)
             except:
                 continue
 
             # Convert raw to numpy array
-            data = unpack("%dh" % (len(data) / 2), data)
-            data = np.array(data, dtype='h')
+            frame = unpack("%dh" % (len(frame) / 2), frame)
+            frame = np.array(frame, dtype='h')
 
             # Run numpy real FFT
-            fourier = np.fft.rfft(data)
+            fourier = np.fft.rfft(frame)
             power = np.abs(fourier)
 
             i = 0
