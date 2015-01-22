@@ -18,6 +18,7 @@ import sys
 import os
 import signal
 import math
+import time
 import pyaudio
 import numpy as np
 from struct import unpack
@@ -26,6 +27,7 @@ from multiprocessing import Process, Value, Pipe
 class SoundAnalyzer(object):
 
     _clip = 256
+    _fps = 60
 
     def __init__(self, sample, chunk):
         self._chunk = chunk
@@ -109,11 +111,17 @@ class SoundAnalyzer(object):
         scale = 128
         avg_loudness = 0
 
+        start = time.time()
         while running:
             try:
                 frame = input.read(self._chunk)
             except:
                 continue
+
+            dt = time.time() - start
+            if dt < (1.0/self._fps):
+                continue
+            start = time.time()
 
             # Convert raw to numpy array
             frame = unpack("%dh" % (len(frame) / 2), frame)
