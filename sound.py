@@ -159,9 +159,11 @@ class SoundAnalyzer(object):
 
             loudness = int(((2*bass.level) + mid.level +  tre.level) / 4)
             avg_loudness = int((0.75 * avg_loudness) + (1.0 - 0.75) * loudness)
+            peak = (bass.level >= self._clip) or \
+                (mid.level >= self._clip) or (tre.level >= self._clip)
 
             if not silence:
-                if avg_loudness >= (self._clip * 0.50):
+                if peak or avg_loudness >= (self._clip * 0.50):
                     scale = scale + 2
                 elif avg_loudness <= (self._clip * 0.05) and scale >= 2:
                     scale = scale - 1
