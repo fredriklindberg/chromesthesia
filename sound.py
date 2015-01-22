@@ -26,6 +26,10 @@ from multiprocessing import Process, Value, Pipe
 
 class SoundAnalyzer(object):
 
+    class Bin(object):
+        def __init__(self):
+            self.level = 0
+
     _clip = 256
     _fps = 60
 
@@ -95,17 +99,9 @@ class SoundAnalyzer(object):
         bass_e = 1
         mid_e = bass_e + bin_per_band
 
-        data = {
-            "bass" : {
-                "level" : 0
-            },
-            "mid" : {
-                "level" : 0
-            },
-            "tre" : {
-                "level" : 0
-            }
-        }
+        bass = SoundAnalyzer.Bin()
+        mid = SoundAnalyzer.Bin()
+        tre = SoundAnalyzer.Bin()
 
         silence_thres = self._clip * 0.02
         scale = 128
@@ -144,16 +140,15 @@ class SoundAnalyzer(object):
             spectrum = np.divide(spectrum, scale)
             spectrum = spectrum.clip(0, self._clip)
 
-            data["bass"]["level"] = int(np.mean(spectrum[0:bass_e]))
-            data["mid"]["level"] = int(np.mean(spectrum[bass_e:mid_e]))
-            data["tre"]["level"] = int(np.mean(spectrum[mid_e:]))
+            bass.level = int(np.mean(spectrum[0:bass_e]))
+            mid.level = int(np.mean(spectrum[bass_e:mid_e]))
+            tre.level = int(np.mean(spectrum[mid_e:]))
 
-            silence = data["bass"]["level"] <= silence_thres and \
-                data["mid"]["level"] <= silence_thres and \
-                data["tre"]["level"] <= silence_thres
+            silence = bass.level <= silence_thres and \
+                mid.level <= silence_thres and \
+                tre.level <= silence_thres
 
-            loudness = int(((2*data["bass"]["level"]) + \
-                data["mid"]["level"] + data["tre"]["level"]) / 4)
+            loudness = int(((2*bass.level) + mid.level +  tre.level) / 4)
             avg_loudness = int((0.75 * avg_loudness) + (1.0 - 0.75) * loudness)
 
             if not silence:
@@ -162,7 +157,17 @@ class SoundAnalyzer(object):
                 elif avg_loudness <= (self._clip * 0.05) and scale >= 2:
                     scale = scale - 1
 
-            pipe.send({"bins" : data, "spectrum" : spectrum})
+            pipe.send({"bins" : {
+                    "bass" : {
+                        "level" : bass.level
+                    },
+                    "mid" : {
+                        "level" : mid.level
+                    },
+                    "tre" : {
+                        "level" : tre.level
+                    },
+                }, "spectrum" : spectrum})
 
     def scaled(self):
         return self._pipe.recv()
