@@ -94,27 +94,12 @@ def main(args):
     sa.start()
 
     try:
-        prev_bass = 0
-        is_beat = False
-        start = time.time()
         while True:
             data = sa.scaled()
 
             bass = data["bins"]["bass"]["level"]
             mid = data["bins"]["mid"]["level"]
             treble = data["bins"]["tre"]["level"]
-
-            if (time.time() - start) >= 0.05:
-                delta = bass - prev_bass
-                if bass >= 150 and delta >= 50:
-                    is_beat = True
-                else:
-                    is_beat = False
-                prev_bass = bass
-                start = time.time()
-
-                for l in lights:
-                    l.update(is_beat, bass, mid, treble)
 
             if opts.debug:
                 print "Bass: {:3d}, Mid: {:3d}, Treble: {:3d}".\
