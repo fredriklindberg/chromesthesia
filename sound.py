@@ -89,9 +89,9 @@ class SoundAnalyzer(object):
 
         spectrum = [0] * len(self._bins)
 
-        bin_per_band = len(self._bins) / 3
-        bass_e = max(1, bin_per_band - 1) + 1
-        mid_e = bass_e + bin_per_band + 1
+        bin_per_band = (len(self._bins) - 1) / 2
+        bass_e = 1
+        mid_e = bass_e + bin_per_band
 
         data = {
             "bass" : {
