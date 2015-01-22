@@ -28,7 +28,16 @@ class SoundAnalyzer(object):
 
     class Bin(object):
         def __init__(self):
-            self.level = 0
+            self._level = 0
+
+        @property
+        def level(self):
+            return self._level
+
+        @level.setter
+        def level(self, value):
+            # Approximated rolling average
+            self._level = int((self._level / 2) + (value / 2))
 
     _clip = 256
     _fps = 60
