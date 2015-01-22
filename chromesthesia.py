@@ -95,7 +95,7 @@ def main(args):
 
     try:
         while True:
-            data = sa.scaled()
+            data = sa.data()
 
             bass = data["bins"]["bass"]["level"]
             mid = data["bins"]["mid"]["level"]

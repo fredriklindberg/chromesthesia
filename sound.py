@@ -169,7 +169,7 @@ class SoundAnalyzer(object):
                     },
                 }, "spectrum" : spectrum})
 
-    def scaled(self):
+    def data(self):
         return self._pipe.recv()
 
     @property
