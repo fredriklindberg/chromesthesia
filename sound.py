@@ -29,9 +29,16 @@ class SoundAnalyzer(object):
 
     class Bin(object):
         def __init__(self, fps):
+            self._fps = fps
             self._level = 0
             self._prevlevel = 0
             self._avgflux = filter.RMA(fps * 2.5)
+            self._avgflux_rect = filter.RMA(fps * 2.5)
+            self._flux_thres = filter.MMF(fps * 5)
+            self._attack = False
+            self._in_transient = False
+            self._transient = 0.0
+            self._transient_period = 0.1
 
         @property
         def level(self):
@@ -47,9 +54,46 @@ class SoundAnalyzer(object):
             flux = self._level - self._prevlevel
             self._avgflux.add(abs(flux))
 
+            # Onset/transient calculation
+            in_attack = self._level >= self._prevlevel
+            onset = flux - self._avgflux_rect.value() >= self._flux_thres.value()
+
+            if not self._in_transient:
+                if onset:
+                    self._attack = True
+                    self._in_transient = True
+                    self._transient = 1.0
+                    self._onset_ts = time.time()
+                    self._attack_vector = [self._level]
+                    self._transient_level = self._level
+            else:
+                x = 1.0 / (self._transient_period / (1.0 / self._fps))
+                self._transient = max(0.0, self._transient - x)
+
+                if self._attack:
+                    if not in_attack:
+                        self._transient_level = np.mean(self._attack_vector)
+                    else:
+                        self._attack_vector.append(self._level)
+                    self._attack = in_attack
+                elif (self._level < self._transient_level and self._transient <= 0.75) \
+                        or self._transient <= 0.0:
+                    self._transient = 0.0
+                    self._in_transient = False
+                    self._transient_period = \
+                        (self._transient_period / 2) + (time.time() - self._onset_ts) / 2
+
+            self._avgflux_rect.add(max(0.0, flux))
+            if flux > 0:
+                self._flux_thres.add(flux)
+
         @property
         def flux(self):
             return self._avgflux.value()
+
+        @property
+        def transient(self):
+            return self._transient
 
     def __init__(self, sample, fps):
         self._fps = fps
@@ -196,14 +240,17 @@ class SoundAnalyzer(object):
                     "bass" : {
                         "level" : bass.level,
                         "flux" : bass.flux,
+                        "transient" : bass.transient
                     },
                     "mid" : {
                         "level" : mid.level,
-                        "flux" : mid.flux
+                        "flux" : mid.flux,
+                        "transient" : mid.transient
                     },
                     "tre" : {
                         "level" : tre.level,
-                        "flux" : tre.flux
+                        "flux" : tre.flux,
+                        "transient" : tre.transient
                     },
                 }, "spectrum" : spectrum})
 

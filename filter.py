@@ -33,3 +33,24 @@ class RMA(object):
 
     def value(self):
         return self._average
+
+# Moving median filter
+class MMF(object):
+    def __init__(self, size):
+        size = int(size)
+        self._size = size
+        self._a = [0] * size
+        self._median = 0.0
+        self._pos = 0
+        if self._size % 2:
+            self._index = [(size / 2) - 1, size / 2]
+        else:
+            self._index = [size / 2, size / 2]
+
+    def add(self, value):
+        self._a[self._pos] = value
+        self._pos = (self._pos + 1) % self._size
+        self._median = (self._a[self._index[0]] + self._a[self._index[1]]) / 2.0
+
+    def value(self):
+        return self._median
