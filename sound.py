@@ -88,6 +88,8 @@ class SoundAnalyzer(object):
                 if (i % ith) == 0:
                     self._eq.append((eq[i] + eq[i+1]) / 2)
             self._eq.append(eq[-1])
+        else:
+            self._eq = eq[0:len(self._bins)]
 
     def bins(self):
         return len(self._bins)
