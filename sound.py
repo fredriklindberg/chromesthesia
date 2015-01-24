@@ -167,10 +167,7 @@ class SoundAnalyzer(object):
             i = 0
             for bin in self._bins:
                 s,e = bin
-                try:
-                    spectrum[i] = int(np.mean(power[s:e:1]))
-                except:
-                    spectrum[i] = 0
+                spectrum[i] = np.mean(power[s:e])
                 i = i + 1
 
             spectrum = np.multiply(spectrum, self._eq)
