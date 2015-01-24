@@ -57,6 +57,8 @@ class SoundAnalyzer(object):
 
         self._chunk = chunk
         self._sample = sample
+        self._channels = 1
+        self._sample_width = 16
 
         bins = []
         freq = sample
@@ -114,8 +116,20 @@ class SoundAnalyzer(object):
         signal.signal(signal.SIGINT, signal.SIG_IGN)
 
         pa = pyaudio.PyAudio()
-        input = pa.open(format=pyaudio.paInt16, input=True,
-            channels=1, rate=self._sample, frames_per_buffer=self._chunk)
+        sample_fmt = pa.get_format_from_width(self._sample_width / 8)
+        input = pa.open(format=sample_fmt, input=True,
+            channels=self._channels, rate=self._sample,
+            frames_per_buffer=self._chunk)
+
+        sample_size = self._sample_width / 8
+        frame_len = self._chunk * sample_size * self._channels
+
+        if sample_size == 1:
+            data_type = 'b'
+            unpack_fmt = "%db" % int(frame_len)
+        elif sample_size == 2:
+            data_type = 'h'
+            unpack_fmt = "%dh" % int(frame_len / 2)
 
         spectrum = [0] * len(self._bins)
 
@@ -143,8 +157,8 @@ class SoundAnalyzer(object):
             start = cur
 
             # Convert raw to numpy array
-            frame = unpack("%dh" % (len(frame) / 2), frame)
-            frame = np.array(frame, dtype='h')
+            frame = unpack(unpack_fmt, frame)
+            frame = np.array(frame, dtype=data_type)
 
             # Run numpy real FFT
             fourier = np.fft.rfft(frame)
