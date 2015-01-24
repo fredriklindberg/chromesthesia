@@ -63,6 +63,7 @@ class SoundAnalyzer(object):
         # Split sample rate into bins with an exponential decay
         # and 0-156 selected as the smallest band.  We calculate
         # the mean power over these bins.
+        freq = freq / 2
         while freq > 156:
             prev_freq = freq
             freq = freq / 2
