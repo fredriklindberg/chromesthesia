@@ -41,7 +41,7 @@ class SoundAnalyzer(object):
         def level(self, value):
             self._prevlevel = self._level
             # Approximated rolling average
-            self._level = int((self._level / 2) + (value / 2))
+            self._level = (self._level / 2.0) + (value / 2.0)
 
             # Update spectral flux value
             flux = self._level - self._prevlevel
@@ -51,7 +51,6 @@ class SoundAnalyzer(object):
         def flux(self):
             return self._avgflux.value()
 
-    _clip = 256
     _fps = 60
 
     def __init__(self, sample, chunk):
@@ -124,7 +123,7 @@ class SoundAnalyzer(object):
         mid = SoundAnalyzer.Bin(self._fps)
         tre = SoundAnalyzer.Bin(self._fps)
 
-        silence_thres = self._clip * 0.02
+        silence_thres = 0.02
         scale = 128
         avg_loudness = 0
 
@@ -159,26 +158,25 @@ class SoundAnalyzer(object):
 
             spectrum = np.multiply(spectrum, self._eq)
             spectrum = np.divide(spectrum, scale)
-            spectrum = spectrum.clip(0, self._clip)
+            spectrum = spectrum.clip(0.0, 1.0)
 
-            bass.level = int(np.mean(spectrum[0:bass_e]))
-            mid.level = int(np.mean(spectrum[bass_e:mid_e]))
-            tre.level = int(np.mean(spectrum[mid_e:]))
+            bass.level = np.mean(spectrum[0:bass_e])
+            mid.level = np.mean(spectrum[bass_e:mid_e])
+            tre.level = np.mean(spectrum[mid_e:])
 
             silence = bass.level <= silence_thres and \
                 mid.level <= silence_thres and \
                 tre.level <= silence_thres
 
-            loudness = int(((2*bass.level) + mid.level +  tre.level) / 4)
-            avg_loudness = int((0.75 * avg_loudness) + (1.0 - 0.75) * loudness)
-            peak = (bass.level >= self._clip) or \
-                (mid.level >= self._clip) or (tre.level >= self._clip)
+            loudness = ((2 * bass.level) + mid.level +  tre.level) / 4
+            avg_loudness = (0.75 * avg_loudness) + (1.0 - 0.75) * loudness
+            peak = bass.level >= 1.0 or mid.level >= 1.0 or tre.level >= 1.0
 
             if not silence:
-                if peak or avg_loudness >= (self._clip * 0.50):
-                    scale = scale + 2
-                elif avg_loudness <= (self._clip * 0.05) and scale >= 2:
-                    scale = scale - 1
+                if peak or avg_loudness >= 0.5:
+                    scale = scale * 1.1
+                elif avg_loudness <= 0.05 and scale >= 2:
+                    scale = scale / 1.1
 
             pipe.send({"bins" : {
                     "bass" : {

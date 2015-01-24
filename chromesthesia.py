@@ -101,7 +101,7 @@ def main(args):
             treble = data["bins"]["tre"]["level"]
 
             if opts.debug:
-                print "Bass: {:3d}, Mid: {:3d}, Treble: {:3d}".\
+                print "Bass: {:.3f}, Mid: {:.3f}, Treble: {:.3f}".\
                     format(bass, mid, treble)
 
     except KeyboardInterrupt:
