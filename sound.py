@@ -24,11 +24,15 @@ import numpy as np
 from struct import unpack
 from multiprocessing import Process, Value, Pipe
 
+import filter
+
 class SoundAnalyzer(object):
 
     class Bin(object):
-        def __init__(self):
+        def __init__(self, fps):
             self._level = 0
+            self._prevlevel = 0
+            self._avgflux = filter.RMA(fps * 2.5)
 
         @property
         def level(self):
@@ -36,8 +40,17 @@ class SoundAnalyzer(object):
 
         @level.setter
         def level(self, value):
+            self._prevlevel = self._level
             # Approximated rolling average
             self._level = int((self._level / 2) + (value / 2))
+
+            # Update spectral flux value
+            flux = self._level - self._prevlevel
+            self._avgflux.add(abs(flux))
+
+        @property
+        def flux(self):
+            return self._avgflux.value()
 
     _clip = 256
     _fps = 60
@@ -108,9 +121,9 @@ class SoundAnalyzer(object):
         bass_e = 1
         mid_e = bass_e + bin_per_band
 
-        bass = SoundAnalyzer.Bin()
-        mid = SoundAnalyzer.Bin()
-        tre = SoundAnalyzer.Bin()
+        bass = SoundAnalyzer.Bin(self._fps)
+        mid = SoundAnalyzer.Bin(self._fps)
+        tre = SoundAnalyzer.Bin(self._fps)
 
         silence_thres = self._clip * 0.02
         scale = 128
@@ -170,13 +183,16 @@ class SoundAnalyzer(object):
 
             pipe.send({"bins" : {
                     "bass" : {
-                        "level" : bass.level
+                        "level" : bass.level,
+                        "flux" : bass.flux,
                     },
                     "mid" : {
-                        "level" : mid.level
+                        "level" : mid.level,
+                        "flux" : mid.flux
                     },
                     "tre" : {
-                        "level" : tre.level
+                        "level" : tre.level,
+                        "flux" : tre.flux
                     },
                 }, "spectrum" : spectrum})
 
