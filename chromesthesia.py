@@ -67,7 +67,6 @@ def main(args):
         return 1
 
     sample = get_cfg_int(config, "global", "sample", 20000)
-    chunk = get_cfg_int(config, "global", "chunk", 160)
 
     lights = []
     i = 1
@@ -89,7 +88,7 @@ def main(args):
         l.channel = chan
         lights.append(l)
 
-    sa = SoundAnalyzer(sample, chunk)
+    sa = SoundAnalyzer(sample, 60)
     sa.start()
 
     try:

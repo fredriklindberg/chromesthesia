@@ -51,9 +51,10 @@ class SoundAnalyzer(object):
         def flux(self):
             return self._avgflux.value()
 
-    _fps = 60
+    def __init__(self, sample, fps):
+        self._fps = fps
+        chunk = int(sample / fps)
 
-    def __init__(self, sample, chunk):
         self._chunk = chunk
         self._sample = sample
 
@@ -134,10 +135,9 @@ class SoundAnalyzer(object):
             except:
                 continue
 
-            dt = time.time() - start
-            if dt < (1.0/self._fps):
-                continue
-            start = time.time()
+            cur = time.time()
+            dt = cur - start
+            start = cur
 
             # Convert raw to numpy array
             frame = unpack("%dh" % (len(frame) / 2), frame)
