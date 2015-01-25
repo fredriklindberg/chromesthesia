@@ -19,8 +19,8 @@
 #   a form of synesthesia in which nonvisual stimulation
 #   results in the experience of color sensations.
 #
-# chromesthesia is a realtime sound analyzer and semi-beat detection
-# system that generates DMX output to light rigs based on sound.
+# chromesthesia is a realtime sound visualizer that can generate
+# real life physical light shows as well as digital on-screen visuals.
 
 import sys
 import output
