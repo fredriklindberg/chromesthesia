@@ -1,0 +1,70 @@
+# Copyright (C) 2015 Fredrik Lindberg <fli@shapeshifter.se>
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2 of the License.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
+
+class Outputs(object):
+    _outputs = {}
+    _active = {}
+    _instance = None
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._instance = super(Outputs, cls).__new__(cls, *args, **kwargs)
+        return cls._instance
+
+    # Register a new output module
+    def register(self, module):
+        self._outputs[module.alias] = module
+
+    # Enable module
+    def enable(self, name):
+        if not name in self._outputs:
+            return False
+        if name in self._active:
+            return True
+
+        module = self._outputs[name]
+        try:
+            self._active[name] = module.Output()
+        except:
+            return False
+
+        return True
+
+    # Disable module
+    def disable(self, name):
+        if not name in self._active:
+            return False
+        del self._active[name]
+        return True
+
+    def _presentable(self, names):
+        return map(lambda x: {
+            "alias" : self._outputs[x].alias,
+            "name" : self._outputs[x].name,
+            "desc" : self._outputs[x].desc,
+        }, names)
+
+    # Return list of available outputs
+    def available(self):
+        return self._presentable(self._outputs.keys())
+
+    # Return list of active outputs
+    def active(self):
+        return self._presentable(self._active.keys())
+
+    # Update active outputs with new data
+    def update(self, data):
+        for output in self._active:
+            module = self._active[output]
+            module.update(data)
