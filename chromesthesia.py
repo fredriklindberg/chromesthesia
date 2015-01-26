@@ -24,25 +24,38 @@
 
 import sys
 import output
-from sound import SoundAnalyzer
+import console
+from sound import Sound
+from command import Command, command_root
+
+class CmdStart(Command):
+    name = "start"
+    def execute(self):
+        if "sound" in self.storage:
+            return ["Sound processing already running"]
+        self.storage["sound"] = Sound()
+        self.storage["sound"].start()
+
+class CmdStop(Command):
+    name = "stop"
+    def execute(self):
+        if not "sound" in self.storage:
+            return ["Sound processing not running"]
+        self.storage["sound"].running.clear()
+        del self.storage["sound"]
 
 def main(args):
-
-    outputs = output.Outputs()
-    outputs.enable("debug")
-
-    sa = SoundAnalyzer(44100, 60)
-    sa.start()
+    command_root.add(CmdStart())
+    command_root.add(CmdStop())
+    cons = console.Console()
+    cons.set_prompt("chromesthesia> ")
+    cons.start()
 
     try:
-        while True:
-            data = sa.data()
-            outputs.update(data)
-
-    except KeyboardInterrupt:
+        cons.join()
+        command_root.parse("stop")
+    except:
         pass
-
-    sa.stop()
 
     return 0
 
