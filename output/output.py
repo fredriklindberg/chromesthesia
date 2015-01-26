@@ -13,6 +13,19 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
 
+from command import Command, CmdBranch, command_root
+
+class CmdOutputList(Command):
+    def __init__(self):
+        super(CmdOutputList, self).__init__()
+        self.name = "list"
+    def execute(self):
+        output = self.storage["output"]
+        list = ["Available output modules:"]
+        for o in output.available():
+            list.append(" {:s} - {:s}".format(o["alias"], o["desc"]))
+        return list
+
 class Outputs(object):
     _outputs = {}
     _active = {}
@@ -20,6 +33,10 @@ class Outputs(object):
     def __new__(cls, *args, **kwargs):
         if not cls._instance:
             cls._instance = super(Outputs, cls).__new__(cls, *args, **kwargs)
+            c_output = CmdBranch("output")
+            c_output.storage["output"] = cls._instance
+            command_root.add(c_output)
+            c_output.add(CmdOutputList())
         return cls._instance
 
     # Register a new output module

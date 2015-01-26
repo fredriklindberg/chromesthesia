@@ -65,4 +65,9 @@ class Command(object):
     def execute(self):
         return self.parse()
 
+class CmdBranch(Command):
+    def __init__(self, name):
+        super(CmdBranch, self).__init__()
+        self.name = name
+
 command_root = Command()
