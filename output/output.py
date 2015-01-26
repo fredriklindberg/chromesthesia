@@ -26,6 +26,28 @@ class CmdOutputList(Command):
             list.append(" {:s} - {:s}".format(o["alias"], o["desc"]))
         return list
 
+class CmdOutputOnOff(Command):
+    def __init__(self, name):
+        super(CmdOutputOnOff, self).__init__()
+        self.name = name
+    def execute(self):
+        if len(self.tokens) != 1:
+            return False
+        module_name = self.tokens[0][1]
+
+        output = self.storage["output"]
+        if self.name == "enable":
+            result = output.enable(module_name)
+        elif self.name == "disable":
+            result = output.disable(module_name)
+
+        if result:
+            list = ["Output module {:s} {:s}d".format(module_name, self.name)]
+        else:
+            list = ["Unable to {:s} module {:s}".format(self.name, module_name)]
+
+        return list
+
 class Outputs(object):
     _outputs = {}
     _active = {}
@@ -37,6 +59,8 @@ class Outputs(object):
             c_output.storage["output"] = cls._instance
             command_root.add(c_output)
             c_output.add(CmdOutputList())
+            c_output.add(CmdOutputOnOff("enable"))
+            c_output.add(CmdOutputOnOff("disable"))
         return cls._instance
 
     # Register a new output module

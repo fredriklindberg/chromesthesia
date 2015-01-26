@@ -34,7 +34,6 @@ class Sound(Thread):
         self.running.set()
 
         outputs = output.Outputs()
-        outputs.enable("debug")
 
         sa = SoundAnalyzer(44100, 60)
         sa.start()
