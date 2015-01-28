@@ -30,6 +30,9 @@ class CmdOutputOnOff(Command):
     def __init__(self, name):
         super(CmdOutputOnOff, self).__init__()
         self.name = name
+    def hints(self):
+        list = self.storage["output"].available()
+        return map(lambda x: x["alias"], list)
     def execute(self):
         if len(self.tokens) != 1:
             return False

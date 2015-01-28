@@ -36,10 +36,17 @@ class Console(Thread):
             command_root.add(CmdQuit("quit", cls))
         return cls._instance
 
+    def _complete(self, text, state):
+        hints = (readline.get_endidx() - readline.get_begidx()) == 0
+        matches = command_root.match(readline.get_line_buffer(), hints)
+        return matches[state]
+
     def set_prompt(self, prompt):
         self._prompt = prompt
 
     def run(self):
+        readline.parse_and_bind('tab: complete')
+        readline.set_completer(self._complete)
         self.running.set()
         while self.running.is_set():
             try:

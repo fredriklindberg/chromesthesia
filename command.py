@@ -46,6 +46,30 @@ class Command(object):
             tokens.append((type, value))
         return tokens
 
+    def hints(self):
+        return []
+
+    def match(self, text, hints=False):
+        tokens = self._tokenize(text)
+
+        if self._commands:
+            list = self._commands.keys()
+        else:
+            list = self.hints()
+
+        if len(tokens) <= 0:
+            if self._commands or hints:
+                return list
+            else:
+                return []
+
+        token = tokens[0][1]
+        if token in self._commands:
+            next_str = " ".join(map(lambda x: x[1], tokens[1:]))
+            return self._commands[token].match(next_str, hints)
+
+        return sorted(filter(lambda x: x.startswith(token), list))
+
     def parse(self, str=None):
         if str != None:
             tokens = self._tokenize(str)
