@@ -20,6 +20,7 @@ class Command(object):
     storage = {}
     tokens = []
     name = ''
+    parent = None
 
     def __init__(self):
         self._commands = {}
@@ -28,9 +29,20 @@ class Command(object):
         if command.name in self._commands:
             return False
         self._commands[command.name] = command
+        command.parent = self
         command.storage = self.storage
 
         return True
+
+    def _get_command(self):
+        if not self.parent:
+            return ""
+
+        parent = self.parent._get_command()
+        if parent:
+            return "{:s} {:s}".format(parent, self.name)
+        else:
+            return self.name
 
     def _tokenize(self, string):
         tokens = []
