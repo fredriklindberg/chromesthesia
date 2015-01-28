@@ -17,6 +17,13 @@ import tokenize
 import cStringIO
 
 class Command(object):
+    class NotFound(Exception):
+        pass
+
+    class SyntaxError(Exception):
+        def __init__(self, msg='Syntax error'):
+            self.message = msg
+
     storage = {}
     tokens = []
     name = ''
@@ -89,12 +96,18 @@ class Command(object):
             tokens = self.tokens
 
         if len(tokens) <= 0:
-            return False
+            full_cmd = self._get_command()
+            if full_cmd:
+                raise Command.SyntaxError(
+                    "{:s} requires any of the following sub-commands\n  {:s}"\
+                    .format(full_cmd, ", ".join(self._commands.keys())))
+            else:
+                return []
 
         cmd_name = tokens[0][1]
         self.tokens = tokens[1:]
         if not cmd_name in self._commands:
-            return False
+            raise Command.NotFound()
         self._commands[cmd_name].tokens = self.tokens
         return self._commands[cmd_name].execute()
 

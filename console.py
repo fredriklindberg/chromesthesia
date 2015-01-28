@@ -55,6 +55,10 @@ class Console(Thread):
                 if type(result) is list:
                     for result_line in result:
                         print result_line
+            except Command.NotFound:
+                print "No such command '{:s}'".format(line)
+            except Command.SyntaxError as e:
+                print e.message
             except KeyboardInterrupt:
                 command_root.parse("exit")
             except EOFError:

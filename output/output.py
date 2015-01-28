@@ -35,7 +35,7 @@ class CmdOutputOnOff(Command):
         return map(lambda x: x["alias"], list)
     def execute(self):
         if len(self.tokens) != 1:
-            return False
+            raise Command.SyntaxError("Module name required")
         module_name = self.tokens[0][1]
 
         output = self.storage["output"]
