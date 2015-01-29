@@ -19,7 +19,7 @@ desc = "Prints raw data"
 
 class Output(object):
     def __init__(self):
-        print "Debug enabled"
+        pass
 
     def update(self, data):
         for bin in "bass", "mid", "tre":
