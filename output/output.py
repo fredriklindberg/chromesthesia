@@ -15,15 +15,37 @@
 
 from command import Command, CmdBranch, command_root
 
+class CmdOutputModules(Command):
+    def __init__(self):
+        super(CmdOutputModules, self).__init__()
+        self.name = "modules"
+    def execute(self):
+        output = self.storage["output"]
+        list = ["Available output modules:"]
+        for o in output.available():
+            list.append(" {:s} - {:s}".format(o["alias"], o["desc"]))
+        return list
+
 class CmdOutputList(Command):
     def __init__(self):
         super(CmdOutputList, self).__init__()
         self.name = "list"
     def execute(self):
         output = self.storage["output"]
-        list = ["Available output modules:"]
-        for o in output.available():
-            list.append(" {:s} - {:s}".format(o["alias"], o["desc"]))
+        list = ["Outputs:"]
+        for o in output.instances():
+            list.append(" {:s} ({:s})".format(o["name"], o["type"]))
+        return list
+
+class CmdOutputActive(Command):
+    def __init__(self):
+        super(CmdOutputActive, self).__init__()
+        self.name = "active"
+    def execute(self):
+        output = self.storage["output"]
+        list = ["Active outputs:"]
+        for o in output.active():
+            list.append(" {:s} ({:s})".format(o["name"], o["type"]))
         return list
 
 class CmdOutputOnOff(Command):
@@ -35,25 +57,58 @@ class CmdOutputOnOff(Command):
         return map(lambda x: x["alias"], list)
     def execute(self):
         if len(self.tokens) != 1:
+            raise Command.SyntaxError("Output instance required")
+        instance_name = self.tokens[0][1]
+
+        output = self.storage["output"]
+        if self.name == "enable":
+            result = output.enable(instance_name)
+        elif self.name == "disable":
+            result = output.disable(instance_name)
+
+        if result:
+            list = ["Output {:s} {:s}d".format(instance_name, self.name)]
+        else:
+            list = ["Failed to {:s} output {:s}".format(self.name, instance_name)]
+
+        return list
+
+class CmdOutputCreate(Command):
+    def __init__(self):
+        super(CmdOutputCreate, self).__init__()
+        self.name = "create"
+    def execute(self):
+        if len(self.tokens) != 1:
             raise Command.SyntaxError("Module name required")
         module_name = self.tokens[0][1]
 
         output = self.storage["output"]
-        if self.name == "enable":
-            result = output.enable(module_name)
-        elif self.name == "disable":
-            result = output.disable(module_name)
-
-        if result:
-            list = ["Output module {:s} {:s}d".format(module_name, self.name)]
+        instance_name = output.create(module_name)
+        if instance_name:
+            return ["Output '{:s}' created".format(instance_name)]
         else:
-            list = ["Unable to {:s} module {:s}".format(self.name, module_name)]
+            return ["Failed to create output of type '{:s}'".format(module_name)]
 
-        return list
+class CmdOutputDestroy(Command):
+    def __init__(self):
+        super(CmdOutputDestroy, self).__init__()
+        self.name = "destroy"
+    def execute(self):
+        if len(self.tokens) != 1:
+            raise Command.SyntaxError("Instance name required")
+        instance_name = self.tokens[0][1]
+
+        output = self.storage["output"]
+        if output.destroy(instance_name):
+            return ["Output '{:s}' destroyed".format(instance_name)]
+        else:
+            return ["Failed to destroy output '{:s}'".format(instance_name)]
 
 class Outputs(object):
     _outputs = {}
-    _active = {}
+    _instances = {}
+    _enabled = []
+
     _instance = None
     def __new__(cls, *args, **kwargs):
         if not cls._instance:
@@ -62,6 +117,10 @@ class Outputs(object):
             c_output.storage["output"] = cls._instance
             command_root.add(c_output)
             c_output.add(CmdOutputList())
+            c_output.add(CmdOutputModules())
+            c_output.add(CmdOutputActive())
+            c_output.add(CmdOutputCreate())
+            c_output.add(CmdOutputDestroy())
             c_output.add(CmdOutputOnOff("enable"))
             c_output.add(CmdOutputOnOff("disable"))
         return cls._instance
@@ -70,45 +129,69 @@ class Outputs(object):
     def register(self, module):
         self._outputs[module.alias] = module
 
-    # Enable module
-    def enable(self, name):
-        if not name in self._outputs:
+    # Create an instance of a module
+    def create(self, name):
+        if name not in self._outputs:
             return False
-        if name in self._active:
-            return True
+
+        index = len(self._instances.keys())
+        instance_name = "{:s}{:d}".format(name, index)
+        if instance_name in self._instances:
+            return False
 
         module = self._outputs[name]
         try:
-            self._active[name] = module.Output()
+            instance = module.Output()
         except:
             return False
+        self._instances[instance_name] = {"type" : name, "obj" : instance}
+        return instance_name
 
+    # Destroy an instance of a module
+    def destroy(self, name):
+        if name not in self._instances:
+            return False
+        self.disable(name)
+        del self._instances[name]
+        return True
+
+    # Enable module
+    def enable(self, name):
+        if name in self._enabled:
+            return True
+        self._enabled.append(name)
         return True
 
     # Disable module
     def disable(self, name):
-        if not name in self._active:
+        if name not in self._enabled:
             return False
-        del self._active[name]
+        self._enabled.remove(name)
         return True
 
-    def _presentable(self, names):
-        return map(lambda x: {
+    # Return list of available output modules
+    def available(self):
+        return sorted(map(lambda x: {
             "alias" : self._outputs[x].alias,
             "name" : self._outputs[x].name,
             "desc" : self._outputs[x].desc,
-        }, names)
+        }, self._outputs.keys()))
 
-    # Return list of available outputs
-    def available(self):
-        return self._presentable(self._outputs.keys())
+    # Return list of outputs
+    def instances(self):
+        return sorted(map(lambda x: {
+            "name" : x,
+            "type" : self._instances[x]["type"]
+        }, self._instances.keys()))
 
     # Return list of active outputs
     def active(self):
-        return self._presentable(self._active.keys())
+        return sorted(map(lambda x: {
+            "name" : x,
+            "type" : self._instances[x]["type"]
+        }, self._enabled))
 
     # Update active outputs with new data
     def update(self, data):
-        for output in self._active:
-            module = self._active[output]
-            module.update(data)
+        for instance in self._enabled:
+            self._instances[instance]["obj"].update(data)
