@@ -157,6 +157,8 @@ class Outputs(object):
 
     # Enable module
     def enable(self, name):
+        if name not in self._instances:
+            return False
         if name in self._enabled:
             return True
         self._enabled.append(name)
@@ -168,6 +170,8 @@ class Outputs(object):
 
     # Disable module
     def disable(self, name):
+        if name not in self._instances:
+            return False
         if name not in self._enabled:
             return False
         self._enabled.remove(name)
