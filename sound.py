@@ -22,25 +22,10 @@ import pyaudio
 import numpy as np
 from struct import unpack
 from multiprocessing import Process, Value, Pipe
-from threading import Thread, Event
 
 from command import Command
 import output
 import filter
-
-class Sound(Thread):
-    def run(self):
-        self.running = Event()
-        self.running.set()
-
-        outputs = output.Outputs()
-
-        sa = SoundAnalyzer(44100, 60)
-        sa.start()
-        while self.running.is_set():
-            data = sa.data()
-            outputs.update(data)
-        sa.stop()
 
 class SoundAnalyzer(object):
 
@@ -170,6 +155,9 @@ class SoundAnalyzer(object):
         self._running.value = 0
         self._p.terminate()
         self._p.join()
+
+    def fileno(self):
+        return self._pipe.fileno()
 
     def _run(self, running, pipe):
         self._pipe.close()
