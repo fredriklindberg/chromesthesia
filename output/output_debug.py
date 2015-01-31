@@ -21,6 +21,12 @@ class Output(object):
     def __init__(self):
         pass
 
+    def on_enable(self):
+        print "Debug enabled"
+
+    def on_disable(self):
+        print "Debug disable"
+
     def update(self, data):
         for bin in "bass", "mid", "tre":
             print "{:s}: l:{:.3f} f:{:.3f} t:{:.3f} ".format(bin,

@@ -160,6 +160,10 @@ class Outputs(object):
         if name in self._enabled:
             return True
         self._enabled.append(name)
+        try:
+            self._instances[name]["obj"].on_enable()
+        except AttributeError:
+            pass
         return True
 
     # Disable module
@@ -167,6 +171,10 @@ class Outputs(object):
         if name not in self._enabled:
             return False
         self._enabled.remove(name)
+        try:
+            self._instances[name]["obj"].on_disable()
+        except AttributeError:
+            pass
         return True
 
     # Return list of available output modules
