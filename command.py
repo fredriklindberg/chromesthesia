@@ -14,7 +14,10 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
 
 import tokenize
-import cStringIO
+try:
+    from StringIO import StringIO
+except:
+    from io import StringIO
 
 class Command(object):
     class NotFound(Exception):
@@ -53,7 +56,7 @@ class Command(object):
 
     def _tokenize(self, string):
         tokens = []
-        src = cStringIO.StringIO(string).readline
+        src = StringIO(string).readline
         for (type, value, _, _, _) in tokenize.generate_tokens(src):
             if type == tokenize.ENDMARKER:
                 break
