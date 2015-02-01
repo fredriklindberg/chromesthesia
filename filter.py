@@ -43,9 +43,9 @@ class MMF(object):
         self._median = 0.0
         self._pos = 0
         if self._size % 2:
-            self._index = [(size / 2) - 1, size / 2]
+            self._index = [int((size / 2) - 1), int(size / 2)]
         else:
-            self._index = [size / 2, size / 2]
+            self._index = [int(size / 2), int(size / 2)]
 
     def add(self, value):
         self._a[self._pos] = value
