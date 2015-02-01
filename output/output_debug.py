@@ -22,16 +22,17 @@ class Output(object):
         pass
 
     def on_enable(self):
-        print "Debug enabled"
+        print("Debug enabled")
 
     def on_disable(self):
-        print "Debug disable"
+        print("Debug disable")
 
     def update(self, data):
+        string = ""
         for bin in "bass", "mid", "tre":
-            print "{:s}: l:{:.3f} f:{:.3f} t:{:.3f} ".format(bin,
+            string += "{:s}: l:{:.3f} f:{:.3f} t:{:.3f} ".format(bin,
                 data["bins"][bin]["level"],
                 data["bins"][bin]["flux"],
                 data["bins"][bin]["transient"]
-            ),
-        print ""
+            )
+        print(string)
