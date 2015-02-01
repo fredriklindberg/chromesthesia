@@ -130,7 +130,7 @@ class SoundAnalyzer(object):
         self._eq = []
         eq = [1, 2, 4, 8, 16, 32, 64]
         if len(eq) < len(self._bins):
-            ith = len(eq)/(len(self._bins) - len(eq))
+            ith = int(len(eq)/(len(self._bins) - len(eq)))
             for i in xrange(0, len(eq) - 1):
                 self._eq.append(eq[i])
                 if (i % ith) == 0:
