@@ -159,11 +159,12 @@ class Outputs(object):
     def enable(self, name):
         if name not in self._instances:
             return False
-        if name in self._enabled:
+        instance = self._instances[name]["obj"]
+        if instance in self._enabled:
             return True
-        self._enabled.append(name)
+        self._enabled.append(instance)
         try:
-            self._instances[name]["obj"].on_enable()
+            instance.on_enable()
         except AttributeError:
             pass
         return True
@@ -172,11 +173,12 @@ class Outputs(object):
     def disable(self, name):
         if name not in self._instances:
             return False
-        if name not in self._enabled:
+        instance = self._instances[name]["obj"]
+        if instance not in self._enabled:
             return False
-        self._enabled.remove(name)
+        self._enabled.remove(instance)
         try:
-            self._instances[name]["obj"].on_disable()
+            instance.on_disable()
         except AttributeError:
             pass
         return True
@@ -198,12 +200,14 @@ class Outputs(object):
 
     # Return list of active outputs
     def active(self):
-        return sorted(map(lambda x: {
-            "name" : x,
-            "type" : self._instances[x]["type"]
-        }, self._enabled))
+        enabled = []
+        for name in self._instances:
+            instance = self._instances[name]
+            if instance["obj"] in self._enabled:
+                enabled.append({ "name" : name, "type" : instance["type"]})
+        return sorted(enabled)
 
     # Update active outputs with new data
     def update(self, data):
         for instance in self._enabled:
-            self._instances[instance]["obj"].update(data)
+            instance.update(data)
