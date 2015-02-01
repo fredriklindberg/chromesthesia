@@ -38,13 +38,19 @@ class Console(Thread):
     def set_prompt(self, prompt):
         self._prompt = prompt
 
+    def _input(self):
+        try:
+            return raw_input(self._prompt)
+        except:
+            return input(self._prompt)
+
     def run(self):
         readline.parse_and_bind('tab: complete')
         readline.set_completer(self._complete)
         self.running.set()
         while self.running.is_set():
             try:
-                line = raw_input(self._prompt)
+                line = self._input()
                 result = self.parser(line)
                 if type(result) is list:
                     for result_line in result:
