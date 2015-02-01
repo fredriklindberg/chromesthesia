@@ -259,8 +259,11 @@ class SoundAnalyzer(object):
                     },
                 }, "spectrum" : spectrum})
 
-    def data(self):
-        return self._pipe.recv()
+    def data(self, drop=True):
+        data = self._pipe.recv()
+        while drop and self._pipe.poll():
+            data = self._pipe.recv()
+        return data
 
     @property
     def levels(self):
