@@ -257,7 +257,7 @@ class SoundAnalyzer(object):
                         "flux" : tre.flux,
                         "transient" : tre.transient
                     },
-                }, "spectrum" : spectrum})
+                }, "silence": silence, "spectrum" : spectrum})
 
     def data(self, drop=True):
         data = self._pipe.recv()
