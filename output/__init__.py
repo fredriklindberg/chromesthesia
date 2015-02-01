@@ -18,11 +18,11 @@ import glob
 import sys
 import importlib
 
-from output import Outputs
+from .outputs import Outputs
 
 sys.path.append(os.path.dirname(__file__))
 
-outputs = output.Outputs()
+outputs = Outputs()
 
 modules = glob.glob(os.path.dirname(__file__)+"/output_*.py")
 __all__ = []
