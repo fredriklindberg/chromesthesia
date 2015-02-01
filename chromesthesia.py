@@ -129,9 +129,13 @@ def main(args):
     rlist.append(cp)
     running.set()
     while running.is_set():
-        rr, _, _ = select(rlist, [], [])
-        for obj in rr:
-            obj.read()
+        try:
+            rr, _, _ = select(rlist, [], [])
+            for obj in rr:
+                obj.read()
+        except KeyboardInterrupt:
+            cons.running.clear()
+            running.clear()
 
     cons.join()
     return 0
