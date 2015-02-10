@@ -126,18 +126,8 @@ class SoundAnalyzer(object):
         self._bins = bins
 
         # Calculate EQ weights
-        # Start with power of 2 up to 64 and stretch to match number of bins
-        self._eq = []
-        eq = [1, 2, 4, 8, 16, 32, 64]
-        if len(eq) < len(self._bins):
-            ith = int(len(eq)/(len(self._bins) - len(eq)))
-            for i in range(0, len(eq) - 1):
-                self._eq.append(eq[i])
-                if (i % ith) == 0:
-                    self._eq.append((eq[i] + eq[i+1]) / 2)
-            self._eq.append(eq[-1])
-        else:
-            self._eq = eq[0:len(self._bins)]
+        # Range from 2^0 to 2^6 (64) stretched over the number of bins
+        self._eq = np.power(2, np.linspace(0, 6, len(self._bins)))
 
     def bins(self):
         return len(self._bins)
