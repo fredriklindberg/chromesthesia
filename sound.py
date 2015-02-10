@@ -111,18 +111,20 @@ class SoundAnalyzer(object):
         # Split sample rate into bins with an exponential decay
         # and 0-156 selected as the smallest band.  We calculate
         # the mean power over these bins.
+        scale = 2
         freq = freq / 2
         while freq > 156:
             prev_freq = freq
-            freq = freq / 2
-
-            # Pre-calculate offset into power array
-            prev_power_idx = 2 * chunk * prev_freq / sample
-            power_idx = 2 * chunk * freq / sample
-
+            while True:
+                freq = freq / scale
+                # Pre-calculate offset into power array
+                prev_power_idx = scale * chunk * prev_freq / sample
+                power_idx = scale * chunk * freq / sample
+                if (prev_power_idx - power_idx) >= 1:
+                    break
             bins.insert(0, [power_idx, prev_power_idx])
 
-        bins.insert(0, [0, (2 * chunk * freq / sample)])
+        bins.insert(0, [0, (scale * chunk * freq / sample)])
         self._bins = bins
 
         # Calculate EQ weights
