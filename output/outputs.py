@@ -13,6 +13,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
 
+import time
+
 from command import Command, CmdBranch, command_root
 
 class CmdOutputModules(Command):
@@ -123,6 +125,7 @@ class Outputs(object):
             c_output.add(CmdOutputDestroy())
             c_output.add(CmdOutputOnOff("enable"))
             c_output.add(CmdOutputOnOff("disable"))
+            cls._update_ts = time.time()
         return cls._instance
 
     # Register a new output module
@@ -209,5 +212,9 @@ class Outputs(object):
 
     # Update active outputs with new data
     def update(self, data):
+        now = time.time()
+        dt = now - self._update_ts
+        self._update_ts = now
+
         for instance in self._enabled:
-            instance.update(data)
+            instance.update(data, dt)

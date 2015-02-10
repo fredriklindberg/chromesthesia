@@ -86,7 +86,7 @@ class Output(object):
         self.window.close()
         self.window = None
 
-    def update(self, data):
+    def update(self, data, dt):
         self.window.data = data
         pyglet.clock.tick()
         self.window.switch_to()

@@ -27,8 +27,8 @@ class Output(object):
     def on_disable(self):
         print("Debug disable")
 
-    def update(self, data):
-        string = ""
+    def update(self, data, dt):
+        string = "dt:{:.3f} ".format(dt)
         for bin in "bass", "mid", "tre":
             string += "{:s}: l:{:.3f} f:{:.3f} t:{:.3f} ".format(bin,
                 data["bins"][bin]["level"],
