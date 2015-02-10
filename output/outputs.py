@@ -188,11 +188,11 @@ class Outputs(object):
 
     # Return list of available output modules
     def available(self):
-        return sorted(map(lambda x: {
+        return map(lambda x: {
             "alias" : self._outputs[x].alias,
             "name" : self._outputs[x].name,
             "desc" : self._outputs[x].desc,
-        }, self._outputs.keys()))
+        }, sorted(self._outputs.keys()))
 
     # Return list of outputs
     def instances(self):
