@@ -40,7 +40,9 @@ class SoundAnalyzer(object):
             self._attack = False
             self._in_transient = False
             self._transient = 0.0
-            self._transient_period = 0.1
+            self._transient_period = filter.RMA(fps * 2)
+            self._transient_period.add(0.25)
+            self._ts = time.time()
 
         @property
         def level(self):
@@ -48,6 +50,10 @@ class SoundAnalyzer(object):
 
         @level.setter
         def level(self, value):
+            now = time.time()
+            dt = now - self._ts
+            self._ts = now
+
             self._prevlevel = self._level
             # Approximated rolling average
             self._level = (self._level / 2.0) + (value / 2.0)
@@ -65,25 +71,33 @@ class SoundAnalyzer(object):
                     self._attack = True
                     self._in_transient = True
                     self._transient = 1.0
-                    self._onset_ts = time.time()
+                    self._onset_ts = now
                     self._attack_vector = [self._level]
                     self._transient_level = self._level
             else:
-                x = 1.0 / (self._transient_period / (1.0 / self._fps))
-                self._transient = max(0.0, self._transient - x)
+                x = 1.0 / (self._transient_period.value() / dt)
+                self._transient -= x
 
                 if self._attack:
                     if not in_attack:
-                        self._transient_level = np.mean(self._attack_vector)
+                        self._transient_level = \
+                            np.mean(self._attack_vector) * 0.75
                     else:
                         self._attack_vector.append(self._level)
                     self._attack = in_attack
-                elif (self._level < self._transient_level and self._transient <= 0.75) \
-                        or self._transient <= 0.0:
-                    self._transient = 0.0
-                    self._in_transient = False
-                    self._transient_period = \
-                        (self._transient_period / 2) + (time.time() - self._onset_ts) / 2
+                else:
+                    if self._level < self._transient_level:
+                        if self._transient <= 0.0:
+                            self._transient = 0.0;
+                            self._in_transient = False
+                            transient = min(1.0, now - self._onset_ts)
+                            self._transient_period.add(transient)
+                        self._transient /= 2
+
+                    elif self._transient <= -4.0:
+                        self._transient = 0.0;
+                        self._in_transient = False
+                        self._transient_period.add(self._transient_period.value())
 
             self._avgflux_rect.add(max(0.0, flux))
             if flux > 0:
@@ -95,7 +109,7 @@ class SoundAnalyzer(object):
 
         @property
         def transient(self):
-            return self._transient
+            return max(0.0, self._transient)
 
     def __init__(self, sample, fps):
         self._fps = fps
