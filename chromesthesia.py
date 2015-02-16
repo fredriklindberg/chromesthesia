@@ -40,7 +40,7 @@ class CmdStart(Command):
         if "sound" in self.storage:
             return ["Sound processing already running"]
         self.storage["sound"] = SoundProxy()
-        self.storage["sound"].sa.start()
+        self.storage["sound"].start()
         self.rlist.append(self.storage["sound"])
 
 class CmdStop(Command):
@@ -51,13 +51,21 @@ class CmdStop(Command):
     def execute(self):
         if not "sound" in self.storage:
             return ["Sound processing not running"]
-        self.storage["sound"].sa.stop()
+        self.storage["sound"].stop()
         del self.storage["sound"]
 
 class SoundProxy(object):
     def __init__(self):
         self.outputs = output.Outputs()
         self.sa = SoundAnalyzer(44100, 60)
+
+    def start(self):
+        self.sa.start()
+        self.outputs.start()
+
+    def stop(self):
+        self.outputs.stop()
+        self.sa.stop()
 
     def fileno(self):
         return self.sa.fileno()

@@ -210,6 +210,22 @@ class Outputs(object):
                 enabled.append({ "name" : name, "type" : instance["type"]})
         return sorted(enabled)
 
+    # On start event
+    def start(self):
+        for instance in self._enabled:
+            try:
+                instance.on_start()
+            except AttributeError:
+                pass
+
+    # On stop event
+    def stop(self):
+        for instance in self._enabled:
+            try:
+                instance.on_stop()
+            except AttributeError:
+                pass
+
     # Update active outputs with new data
     def update(self, data):
         now = time.time()
