@@ -1,0 +1,73 @@
+// Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License
+// Author: StanRee
+// Source: https://www.shadertoy.com/view/llXGR2
+
+// Modified to work with chromesthesia
+
+void Cam( out vec3 camPos, out vec3 camTar, in float time, in float mouseX )
+{
+    float ur = 4.5;
+    float an = iGlobalTime;
+    an = sin(iGlobalTime*.4)*1.2;
+	camPos = vec3(ur*sin(an),0.5,ur*cos(an)+iGlobalTime);
+    camTar = vec3(0.0,0.0,0.0);
+}
+
+mat3 LookAt( in vec3 ro, in vec3 ta, in float roll )
+{
+    vec3 ww = normalize( ta - ro );
+    vec3 uu = normalize( cross(ww,vec3(sin(roll),cos(roll),0.0) ) );
+    vec3 vv = normalize( cross(uu,ww));
+    return mat3( uu, vv, ww );
+}
+
+void main( void )
+{
+    vec2 p = (-iResolution.xy + 2.0*gl_FragCoord.xy)/iResolution.y;
+    vec2 m = iMouse.xy/iResolution.xy;
+    vec3 ro, ta;
+    Cam(ro, ta, iGlobalTime, 0);
+    mat3 camMat = LookAt( ro, ta,0.0);
+	vec3 rd = normalize( camMat * vec3(p.xy,2.0) );
+	vec3 col = vec3(0.,0.,0.);
+  	const float maxd = 20.0;
+	const float precis = 0.001;
+    float h = precis*2.0;
+    float tt = 0.0;
+	float res = -1.0;
+
+    for( int i=0; i<90; i++ )
+    {
+        if( h<precis||tt>maxd ) break;
+        vec3 pp = ro+rd*tt;
+        pp = mod(pp,2.0)-1.0;
+        vec3 o = pp*pp;
+    	float s = sqrt(o.x+o.y);//*1.2;
+    	s = min(s, sqrt(o.x+o.z));
+    	s = min(s, sqrt(o.y+o.z));
+    	float modd = texture2D(iChannel0, vec2(-.85,-.5)).x*5;
+    	modd += texture2D(iChannel0, vec2(.5,.0)).x*5.;
+    	o.y += modd*.2 - .061;
+    	s = (o.x + o.y)*.5;
+    	h= s;
+        tt += h;
+    }
+
+    if( tt<maxd ) res = tt;
+
+    float t = res;
+    vec3 pp = ro+rd*tt;
+    pp = mod(pp,2.0)-1.0;
+    vec3 o = pp*pp;
+    float s = sqrt(o.x+o.y);//*1.2;
+    s = min(s, sqrt(o.x+o.z));
+    s = min(s, sqrt(o.y+o.z));
+    float modd = texture2D(iChannel0, vec2(-.5,-.5)).x*5;
+    modd += texture2D(iChannel0, vec2(.75,.0)).x*5;
+    o.y += modd*.2 ;
+    s = (o.x + o.y)*.5;
+    t = s;
+    col = vec3(t*.4,t*.8,t*1.8);
+
+    gl_FragColor = vec4( col, 1.0 );
+}
