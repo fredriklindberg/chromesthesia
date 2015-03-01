@@ -32,40 +32,43 @@ from sound import SoundAnalyzer
 from command import Command, command_root
 
 class CmdStart(Command):
-    def __init__(self, rlist):
+    def __init__(self, sp):
         super(CmdStart, self).__init__()
         self.name = "start"
-        self.rlist = rlist
+        self.sp = sp
     def execute(self):
         if "sound" in self.storage:
             return ["Sound processing already running"]
-        self.storage["sound"] = SoundProxy()
-        self.storage["sound"].start()
-        self.rlist.append(self.storage["sound"])
+        self.storage["sound"] = True
+        self.sp.start()
 
 class CmdStop(Command):
-    def __init__(self, rlist):
+    def __init__(self, sp):
         super(CmdStop, self).__init__()
         self.name = "stop"
-        self.rlist = rlist
+        self.sp = sp
     def execute(self):
         if not "sound" in self.storage:
             return ["Sound processing not running"]
-        self.storage["sound"].stop()
+        self.sp.stop()
         del self.storage["sound"]
 
 class SoundProxy(object):
-    def __init__(self):
+    def __init__(self, sa):
         self.outputs = output.Outputs()
-        self.sa = SoundAnalyzer(44100, 60)
+        self.sa = sa
 
     def start(self):
-        self.sa.start()
         self.outputs.start()
+        self.sa.start()
 
     def stop(self):
-        self.outputs.stop()
         self.sa.stop()
+        self.outputs.stop()
+        try:
+            self.sa.data()
+        except:
+            pass
 
     def fileno(self):
         return self.sa.fileno()
@@ -120,21 +123,23 @@ class ConsoleProxy(object):
 
 def main(args):
     running = Event()
-    cp = ConsoleProxy()
 
+    sa = SoundAnalyzer(44100, 60)
+    sp = SoundProxy(sa)
+
+    cp = ConsoleProxy()
     cons = console.Console()
     cons.parser = cp.parser
     cons.completer = cp.completer
     cons.set_prompt("chromesthesia> ")
     cons.start()
 
-    rlist = []
     command_root.add(CmdQuit("exit", [running, cons.running]))
     command_root.add(CmdQuit("quit", [running, cons.running]))
-    command_root.add(CmdStart(rlist))
-    command_root.add(CmdStop(rlist))
+    command_root.add(CmdStart(sp))
+    command_root.add(CmdStop(sp))
 
-    rlist.append(cp)
+    rlist = [sp, cp]
     running.set()
     while running.is_set():
         try:
@@ -145,6 +150,7 @@ def main(args):
             cons.running.clear()
             running.clear()
 
+    sa.close()
     cons.join()
     return 0
 

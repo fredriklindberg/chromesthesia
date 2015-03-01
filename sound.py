@@ -145,11 +145,7 @@ class SoundAnalyzer(object):
         # Range from 2^0 to 2^6 (64) stretched over the number of bins
         self._eq = np.power(2, np.linspace(0, 6, len(self._bins)))
 
-    def bins(self):
-        return len(self._bins)
-
-    def start(self):
-        self._running = Value('i', 1)
+        self._running = Value('i', 0)
         self._pipe, pipe = Pipe(duplex=False)
 
         self._p = Process(target=self._run, args=(self._running, pipe))
@@ -157,10 +153,19 @@ class SoundAnalyzer(object):
         self._p.start()
         pipe.close()
 
-    def stop(self):
-        self._running.value = 0
+    def close(self):
+        self._running.value = -1
         self._p.terminate()
         self._p.join()
+
+    def bins(self):
+        return len(self._bins)
+
+    def start(self):
+        self._running.value = 1
+
+    def stop(self):
+        self._running.value = 0
 
     def fileno(self):
         return self._pipe.fileno()
@@ -170,6 +175,13 @@ class SoundAnalyzer(object):
         self._pipe = pipe
         signal.signal(signal.SIGINT, signal.SIG_IGN)
 
+        while running.value >= 0:
+            if running.value == 1:
+                self._analyze(running, pipe)
+            else:
+                time.sleep(0.1)
+
+    def _analyze(self, running, pipe):
         pa = pyaudio.PyAudio()
         sample_fmt = pa.get_format_from_width(self._sample_width / 8)
         input = pa.open(format=sample_fmt, input=True,
@@ -201,7 +213,7 @@ class SoundAnalyzer(object):
         avg_loudness = 0
 
         start = time.time()
-        while running:
+        while running.value == 1:
             try:
                 frame = input.read(self._chunk)
             except:
