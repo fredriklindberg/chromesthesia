@@ -13,12 +13,19 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
 
-def singleton(cls):
-    instances = {}
-    def getinstance():
-        if cls not in instances:
-            instances[cls] = cls()
-        return instances[cls]
-    return getinstance
+from . import singleton
+from output import outputs
 
-from .artnet_dmx import *
+import artnet
+
+@singleton
+class ArtnetDmx(object):
+    def __init__(self):
+        self._ac = artnet.Controller("chromesthesia")
+        self.dmx = artnet.port.DMX(direction=artnet.port.DMX.INPUT)
+        self._ac.add_port(self.dmx)
+        outputs.register_helper(self)
+
+    def after_update(self):
+        self.dmx.send()
+        self.dmx.reset()
