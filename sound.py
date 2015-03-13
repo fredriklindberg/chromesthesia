@@ -208,7 +208,7 @@ class SoundAnalyzer(object):
         mid = SoundAnalyzer.Bin(self._fps)
         tre = SoundAnalyzer.Bin(self._fps)
 
-        silence_thres = 0.02
+        silence_thres = 0.05
         scale = 128
         avg_loudness = 0
 
