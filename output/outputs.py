@@ -110,6 +110,7 @@ class Outputs(object):
     _outputs = {}
     _instances = {}
     _enabled = []
+    _helpers = []
 
     _instance = None
     def __new__(cls, *args, **kwargs):
@@ -127,6 +128,11 @@ class Outputs(object):
             c_output.add(CmdOutputOnOff("disable"))
             cls._update_ts = time.time()
         return cls._instance
+
+    # Register helper module
+    def register_helper(self, helper):
+        if helper not in self._helpers:
+            self._helpers.append(helper)
 
     # Register a new output module
     def register(self, module):
@@ -232,5 +238,17 @@ class Outputs(object):
         dt = now - self._update_ts
         self._update_ts = now
 
+        for helper in self._helpers:
+            try:
+                helper.before_update()
+            except AttributeError:
+                pass
+
         for instance in self._enabled:
             instance.update(data, dt)
+
+        for helper in self._helpers:
+            try:
+                helper.after_update()
+            except AttributeError:
+                pass
