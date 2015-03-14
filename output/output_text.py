@@ -17,9 +17,18 @@ alias = "text"
 name = "Text"
 desc = "Text output, suitable for testing and debug"
 
+config = {
+    "freq" : {
+        "type" : int,
+        "default" : 1,
+        "help" : "Output frequency"
+    }
+}
+
 class Output(object):
     def __init__(self, config):
-        pass
+        self._freq = config["freq"]
+        self._counter = 0
 
     def on_enable(self):
         print("Text enabled")
@@ -28,6 +37,10 @@ class Output(object):
         print("Text disable")
 
     def update(self, data, dt):
+        self._counter += 1
+        if self._counter < self._freq:
+            return
+        self._counter = 0
         string = "dt:{:.3f} ".format(dt)
         for bin in "bass", "mid", "tre":
             string += "{:s}: l:{:.3f} f:{:.3f} t:{:.3f} ".format(bin,
