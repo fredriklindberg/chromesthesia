@@ -66,6 +66,12 @@ class Command(object):
             elif ident == tokenize.STRING:
                 value = value[1:-1].decode("string-escape")
                 objtype = type(value)
+            elif ident == tokenize.NUMBER:
+                try:
+                    value = int(value)
+                except ValueError:
+                    value = float(value)
+                objtype = type(value)
 
             tokens.append((objtype, value))
         return tokens
