@@ -158,9 +158,6 @@ class SoundAnalyzer(object):
         self._p.terminate()
         self._p.join()
 
-    def bins(self):
-        return len(self._bins)
-
     def start(self):
         self._running.value = 1
 
@@ -282,7 +279,3 @@ class SoundAnalyzer(object):
         while drop and self._pipe.poll():
             data = self._pipe.recv()
         return data
-
-    @property
-    def levels(self):
-        return self._average
