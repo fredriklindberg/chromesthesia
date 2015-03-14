@@ -249,11 +249,11 @@ class Outputs(object):
     # Return list of active outputs
     def active(self):
         enabled = []
-        for name in self._instances:
+        for name in sorted(self._instances.keys()):
             instance = self._instances[name]
             if instance["obj"] in self._enabled:
                 enabled.append({ "name" : name, "type" : instance["type"]})
-        return sorted(enabled)
+        return enabled
 
     # On start event
     def start(self):
