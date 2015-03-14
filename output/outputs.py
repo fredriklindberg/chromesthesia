@@ -79,6 +79,9 @@ class CmdOutputCreate(Command):
     def __init__(self):
         super(CmdOutputCreate, self).__init__()
         self.name = "create"
+    def hints(self):
+        avail = self.storage["output"].available()
+        return list(map(lambda x: x["alias"], avail))
     def execute(self):
         if len(self.tokens) < 1:
             raise Command.SyntaxError("Module name required")
