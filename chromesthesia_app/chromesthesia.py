@@ -23,6 +23,8 @@ from select import select
 from sound import SoundAnalyzer
 from command import Command, command_root
 
+from version import __version__
+
 class CmdStart(Command):
     def __init__(self, sp):
         super(CmdStart, self).__init__()
@@ -119,6 +121,8 @@ class ConsoleProxy(object):
 
 
 def main(args):
+    print("This is chromesthesia {0}".format(__version__))
+
     running = Event()
 
     sa = SoundAnalyzer(44100, 60)
