@@ -1,0 +1,2 @@
+include chromesthesia
+include chromesthesia_app/output/shadertoy/*
