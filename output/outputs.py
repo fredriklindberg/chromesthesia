@@ -241,10 +241,10 @@ class Outputs(object):
 
     # Return list of outputs
     def instances(self):
-        return sorted(map(lambda x: {
+        return map(lambda x: {
             "name" : x,
             "type" : self._instances[x]["type"]
-        }, self._instances.keys()))
+        }, sorted(self._instances.keys()))
 
     # Return list of active outputs
     def active(self):
