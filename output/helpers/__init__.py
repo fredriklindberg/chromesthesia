@@ -21,4 +21,7 @@ def singleton(cls):
         return instances[cls]
     return getinstance
 
-from .artnet_dmx import *
+try:
+    from .artnet_dmx import *
+except:
+    pass
