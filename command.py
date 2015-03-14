@@ -75,7 +75,7 @@ class Command(object):
         tokens = self._tokenize(text)
 
         if self._commands:
-            commands = self._commands.keys()
+            commands = list(self._commands.keys())
         else:
             commands = self.hints()
 
