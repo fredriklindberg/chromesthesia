@@ -70,6 +70,11 @@ class SoundProxy(object):
         except:
             pass
 
+    def close(self):
+        self.sa.stop()
+        self.outputs.stop()
+        self.sa.close()
+
     def fileno(self):
         return self.sa.fileno()
 
@@ -150,7 +155,7 @@ def main(args):
             cons.running.clear()
             running.clear()
 
-    sa.close()
+    sp.close()
     cons.join()
     return 0
 
