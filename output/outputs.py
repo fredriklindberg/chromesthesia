@@ -80,12 +80,30 @@ class CmdOutputCreate(Command):
         super(CmdOutputCreate, self).__init__()
         self.name = "create"
     def execute(self):
-        if len(self.tokens) != 1:
+        if len(self.tokens) < 1:
             raise Command.SyntaxError("Module name required")
         module_name = self.tokens[0][1]
 
+        tokens = self.tokens[1:]
+        if len(tokens) % 3:
+            raise Command.SyntaxError(
+                "Options should be supplied on the format key=value")
+
+        tokens = iter(tokens)
+        tokens = zip(tokens, tokens, tokens)
+        config = {}
+        for ((key_t,key), (_,sep), (_,value)) in tokens:
+            if sep != "=":
+                raise Command.SyntaxError(
+                    "Options should be supplied on the format key=value")
+            if key_t != str:
+                raise Command.SyntaxError(
+                    "Key must be a string")
+
+            config[key] = value
+
         output = self.storage["output"]
-        instance_name = output.create(module_name)
+        instance_name = output.create(module_name, config)
         if instance_name:
             return ["Output '{:s}' created".format(instance_name)]
         else:
@@ -139,7 +157,7 @@ class Outputs(object):
         self._outputs[module.alias] = module
 
     # Create an instance of a module
-    def create(self, name):
+    def create(self, name, user_config={}):
         if name not in self._outputs:
             return False
 
@@ -150,7 +168,28 @@ class Outputs(object):
 
         module = self._outputs[name]
         try:
-            instance = module.Output()
+            module_config = module.config
+        except:
+            module_config = {}
+
+        config = {}
+        for key in module_config:
+            try:
+                config[key] = module.config[key]["default"]
+            except:
+                pass
+
+        for key in user_config:
+            if key not in config:
+                continue
+            value = user_config[key]
+            if "type" in module_config[key] and \
+                not isinstance(value, module_config[key]["type"]):
+                continue
+            config[key] = value
+
+        try:
+            instance = module.Output(config)
         except:
             return False
         self._instances[instance_name] = {"type" : name, "obj" : instance}

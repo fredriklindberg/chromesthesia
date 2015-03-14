@@ -18,7 +18,7 @@ name = "Text"
 desc = "Text output, suitable for testing and debug"
 
 class Output(object):
-    def __init__(self):
+    def __init__(self, config):
         pass
 
     def on_enable(self):

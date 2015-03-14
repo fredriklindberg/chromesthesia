@@ -71,7 +71,7 @@ class SimpleVis(pyglet.window.Window):
             shape.draw()
 
 class Output(object):
-    def __init__(self):
+    def __init__(self, config):
         pyglet.gl.glBlendFunc(pyglet.gl.GL_SRC_ALPHA,
                               pyglet.gl.GL_ONE_MINUS_SRC_ALPHA)
         pyglet.gl.glEnable(pyglet.gl.GL_BLEND)

@@ -288,6 +288,8 @@ class Program(object):
         GL.glDrawArrays(GL.GL_TRIANGLES, 0, int(len(self._vertices) / 2))
 
 class Output(object):
+    def __init__(self, config):
+        pass
 
     def on_start(self):
         self.window = Window(title=b"Shadertoy")
