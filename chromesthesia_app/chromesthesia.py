@@ -14,14 +14,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
 
-#
-# chromesthesia
-#   a form of synesthesia in which nonvisual stimulation
-#   results in the experience of color sensations.
-#
-# chromesthesia is a realtime sound visualizer that can generate
-# real life physical light shows as well as digital on-screen visuals.
-
 import sys
 import output
 import console
