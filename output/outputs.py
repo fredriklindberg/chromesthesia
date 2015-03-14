@@ -55,8 +55,8 @@ class CmdOutputOnOff(Command):
         super(CmdOutputOnOff, self).__init__()
         self.name = name
     def hints(self):
-        list = self.storage["output"].available()
-        return map(lambda x: x["alias"], list)
+        inst = self.storage["output"].instances()
+        return list(map(lambda x: x["name"], inst))
     def execute(self):
         if len(self.tokens) != 1:
             raise Command.SyntaxError("Output instance required")
