@@ -26,6 +26,10 @@ class ArtnetDmx(object):
         self._ac.add_port(self.dmx)
         outputs.register_helper(self)
 
+    def after_stop(self):
+        self.dmx.reset()
+        self.dmx.send()
+
     def after_update(self):
         self.dmx.send()
         self.dmx.reset()
