@@ -57,15 +57,17 @@ class Command(object):
     def _tokenize(self, string):
         tokens = []
         src = StringIO(string).readline
-        for (type, value, _, _, _) in tokenize.generate_tokens(src):
-            if type == tokenize.ENDMARKER:
+        for (ident, value, _, _, _) in tokenize.generate_tokens(src):
+            objtype = None
+            if ident == tokenize.ENDMARKER:
                 break
-            elif type == tokenize.NAME:
-                type = tokenize.STRING
-            elif type == tokenize.STRING:
+            elif ident == tokenize.NAME:
+                objtype = type(value)
+            elif ident == tokenize.STRING:
                 value = value[1:-1].decode("string-escape")
+                objtype = type(value)
 
-            tokens.append((type, value))
+            tokens.append((objtype, value))
         return tokens
 
     def hints(self):
