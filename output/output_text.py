@@ -13,19 +13,19 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
 
-alias = "debug"
-name = "Debug"
-desc = "Prints raw data"
+alias = "text"
+name = "Text"
+desc = "Text output, suitable for testing and debug"
 
 class Output(object):
     def __init__(self):
         pass
 
     def on_enable(self):
-        print("Debug enabled")
+        print("Text enabled")
 
     def on_disable(self):
-        print("Debug disable")
+        print("Text disable")
 
     def update(self, data, dt):
         string = "dt:{:.3f} ".format(dt)
