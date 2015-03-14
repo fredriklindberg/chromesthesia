@@ -5,8 +5,16 @@ try:
 except ImportError:
     from distutils.core import setup
 
+import versioneer
+versioneer.VCS = 'git'
+versioneer.versionfile_source = 'chromesthesia_app/_version.py'
+versioneer.versionfile_build = None
+versioneer.tag_prefix = ''
+versioneer.parentdir_prefix = 'chromesthesia-'
+
 setup(name="chromesthesia",
-      version=0,
+      version=versioneer.get_version(),
+      cmdclass=versioneer.get_cmdclass(),
       description='Realtime sound visualizer with modular output support',
       author='Fredrik Lindberg',
       author_email='fli@shapeshifter.se',

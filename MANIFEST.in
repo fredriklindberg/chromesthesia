@@ -1,2 +1,4 @@
 include chromesthesia
 include chromesthesia_app/output/shadertoy/*
+include versioneer.py
+include chromesthesia_app/_version.py

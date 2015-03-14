@@ -18,3 +18,7 @@ import os
 
 sys.path.append(os.path.dirname(__file__))
 import chromesthesia
+
+from ._version import get_versions
+__version__ = get_versions()['version']
+del get_versions
