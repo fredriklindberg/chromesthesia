@@ -257,17 +257,41 @@ class Outputs(object):
 
     # On start event
     def start(self):
+        for helper in self._helpers:
+            try:
+                helper.before_start()
+            except AttributeError:
+                pass
+
         for instance in self._enabled:
             try:
                 instance.on_start()
             except AttributeError:
                 pass
 
+        for helper in self._helpers:
+            try:
+                helper.after_start()
+            except AttributeError:
+                pass
+
     # On stop event
     def stop(self):
+        for helper in self._helpers:
+            try:
+                helper.before_stop()
+            except AttributeError:
+                pass
+
         for instance in self._enabled:
             try:
                 instance.on_stop()
+            except AttributeError:
+                pass
+
+        for helper in self._helpers:
+            try:
+                helper.after_stop()
             except AttributeError:
                 pass
 
