@@ -75,13 +75,13 @@ class Command(object):
         tokens = self._tokenize(text)
 
         if self._commands:
-            list = self._commands.keys()
+            commands = self._commands.keys()
         else:
-            list = self.hints()
+            commands = self.hints()
 
         if len(tokens) <= 0:
             if self._commands or hints:
-                return list
+                return commands
             else:
                 return []
 
@@ -90,7 +90,7 @@ class Command(object):
             next_str = " ".join(map(lambda x: x[1], tokens[1:]))
             return self._commands[token].match(next_str, hints)
 
-        return sorted(filter(lambda x: x.startswith(token), list))
+        return sorted(filter(lambda x: x.startswith(token), commands))
 
     def parse(self, str=None):
         if str != None:
