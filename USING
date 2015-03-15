@@ -1,5 +1,0 @@
-chromesthesia only supports DMX output via Artnet and has support
-for the following light rigs
-  American DJ Atmospheric RG LED laser
-
-Run with python chromesthesia.py <config file>
