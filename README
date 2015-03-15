@@ -5,12 +5,63 @@ chromesthesia
 chromesthesia is a realtime sound visualizer that can generate
 real life physical light shows as well as digital on-screen visuals.
 
-chromesthesia is a work in progress and created mostly for my own
-amusement.  And I don't really know what I'm doing, most of this
-is just trial and error :)
-
-Copyright (C) 2013 Fredrik Lindberg <fli@shapeshifter.se>
+Copyright (C) 2013-2015 Fredrik Lindberg <fli@shapeshifter.se>
 
 chromesthesia comes with ABSOLUTELY NO WARRANTY. This is free software,
 and you are welcome to redistribute it under certain conditions;
 see the LICENSE file for details.
+
+
+Installation and requirements
+
+Minimum requirements to run, output modules might require
+additional dependencies.
+
+* Python 3
+* numpy
+* PyAudio
+
+* Modules with DMX output via Artnet require python-libartnet
+* shadertoy output require PyOpenGL and PySDL2
+
+To install from source run
+    > python3 setup.py install
+
+chromesthesia will use the systems default line-in/mic as sound source.
+
+Usage
+
+chromesthesia provides a console interactive interface with
+command tab-completion.
+
+    # chromesthesia
+    This is chromesthesia 9f1999e
+    chromesthesia>
+
+To show the available output modules, the output depends on
+what's installed on your system.
+
+    chromesthesia> output modules
+    Available output modules:
+     text - Text output, suitable for testing and debug
+
+To use a module an instance must first be created and enabled.  It's
+possible to create multiple instances of the same module, for example
+with different configurations.
+
+    chromesthesia> output create text
+    Output 'text0' created
+    chromesthesia> output enable text0
+    Output text0 enabled
+    chromesthesia>
+
+Configuration options are passed as key-value pairs when creating
+the instance.  Available configuration options are module dependent.
+
+    chromesthesia> output create text freq=10
+    Output 'text1' created
+
+The commands start and stop controls the sound processing
+
+    chromesthesia> start
+    chromesthesia> stop
