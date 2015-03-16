@@ -88,14 +88,14 @@ class SoundAnalyzer(object):
                 else:
                     if self._level < self._transient_level:
                         if self._transient <= 0.0:
-                            self._transient = 0.0;
+                            self._transient = 0.0
                             self._in_transient = False
                             transient = min(1.0, now - self._onset_ts)
                             self._transient_period.add(transient)
                         self._transient /= 2
 
                     elif self._transient <= -4.0:
-                        self._transient = 0.0;
+                        self._transient = 0.0
                         self._in_transient = False
                         self._transient_period.add(self._transient_period.value())
 
