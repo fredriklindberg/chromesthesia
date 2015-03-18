@@ -188,7 +188,7 @@ class Outputs(object):
             value = user_config[key]
             if "type" in module_config[key] and \
                 not isinstance(value, module_config[key]["type"]):
-                continue
+                return False
             config[key] = value
 
         try:
