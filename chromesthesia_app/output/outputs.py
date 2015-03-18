@@ -189,6 +189,10 @@ class Outputs(object):
             if "type" in module_config[key] and \
                 not isinstance(value, module_config[key]["type"]):
                 return False
+            if "values" in module_config[key] and \
+                value not in module_config[key]["values"]:
+                return False
+
             config[key] = value
 
         try:
