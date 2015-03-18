@@ -274,6 +274,10 @@ class SoundAnalyzer(object):
                     },
                 }, "silence": silence, "spectrum" : spectrum})
 
+        input.stop_stream()
+        input.close()
+        pa.terminate()
+
     def data(self, drop=True):
         data = self._pipe.recv()
         while drop and self._pipe.poll():
