@@ -106,11 +106,12 @@ class CmdOutputCreate(Command):
             config[key] = value
 
         output = self.storage["output"]
-        instance_name = output.create(module_name, config)
-        if instance_name:
-            return ["Output '{:s}' created".format(instance_name)]
+        (result, msg) = output.create(module_name, config)
+        if result:
+            return ["Output '{:s}' created".format(msg)]
         else:
-            return ["Failed to create output of type '{:s}'".format(module_name)]
+            return ["{:s}".format(msg),
+                    "Failed to create output of type '{:s}'".format(module_name)]
 
 class CmdOutputDestroy(Command):
     def __init__(self):
@@ -162,12 +163,12 @@ class Outputs(object):
     # Create an instance of a module
     def create(self, name, user_config={}):
         if name not in self._outputs:
-            return False
+            return (False, "No such output module: {0}".format(name))
 
         index = len(self._instances.keys())
         instance_name = "{:s}{:d}".format(name, index)
         if instance_name in self._instances:
-            return False
+            return (False, "Instance already exists: {0}".format(instance_name))
 
         module = self._outputs[name]
         try:
@@ -188,19 +189,19 @@ class Outputs(object):
             value = user_config[key]
             if "type" in module_config[key] and \
                 not isinstance(value, module_config[key]["type"]):
-                return False
+                return (False, "Wrong data type for option '{0}'".format(key))
             if "values" in module_config[key] and \
                 value not in module_config[key]["values"]:
-                return False
+                return (False, "Invalid value for '{0}': {1}".format(key, value))
 
             config[key] = value
 
         try:
             instance = module.Output(config)
-        except:
-            return False
+        except Exception as e:
+            return (False, "Could not create instance: {0}".format(str(e)))
         self._instances[instance_name] = {"type" : name, "obj" : instance}
-        return instance_name
+        return (True, instance_name)
 
     # Destroy an instance of a module
     def destroy(self, name):
