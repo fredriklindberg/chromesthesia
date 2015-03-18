@@ -13,6 +13,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
 
+import codecs
 import tokenize
 try:
     from StringIO import StringIO
@@ -55,6 +56,14 @@ class Command(object):
             return self.name
 
     def _tokenize(self, string):
+        def _decode(string):
+            result = ""
+            try:
+                result = string.decode("string-escape")
+            except AttributeError:
+                result = codecs.decode(string, "unicode-escape")
+            return result
+
         tokens = []
         src = StringIO(string).readline
         for (ident, value, _, _, _) in tokenize.generate_tokens(src):
@@ -64,7 +73,7 @@ class Command(object):
             elif ident == tokenize.NAME:
                 objtype = type(value)
             elif ident == tokenize.STRING:
-                value = value[1:-1].decode("string-escape")
+                value = _decode(value[1:-1])
                 objtype = type(value)
             elif ident == tokenize.NUMBER:
                 try:
