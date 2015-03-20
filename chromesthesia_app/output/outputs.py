@@ -76,18 +76,18 @@ class CmdOutputOnOff(Command):
         return list
 
 class CmdOutputCreate(Command):
-    def __init__(self):
+    def __init__(self, module):
         super(CmdOutputCreate, self).__init__()
-        self.name = "create"
+        self.name = module.alias
+        self._module = module
     def hints(self):
-        avail = self.storage["output"].available()
-        return list(map(lambda x: x["alias"], avail))
+        try:
+            config = self._module.config
+            return list(config.keys())
+        except:
+            return []
     def execute(self):
-        if len(self.tokens) < 1:
-            raise Command.SyntaxError("Module name required")
-        module_name = self.tokens[0][1]
-
-        tokens = self.tokens[1:]
+        tokens = self.tokens
         if len(tokens) % 3:
             raise Command.SyntaxError(
                 "Options should be supplied on the format key=value")
@@ -106,12 +106,12 @@ class CmdOutputCreate(Command):
             config[key] = value
 
         output = self.storage["output"]
-        (result, msg) = output.create(module_name, config)
+        (result, msg) = output.create(self.name, config)
         if result:
             return ["Output '{:s}' created".format(msg)]
         else:
             return ["{:s}".format(msg),
-                    "Failed to create output of type '{:s}'".format(module_name)]
+                    "Failed to create output of type '{:s}'".format(self.name)]
 
 class CmdOutputDestroy(Command):
     def __init__(self):
@@ -144,7 +144,8 @@ class Outputs(object):
             c_output.add(CmdOutputList())
             c_output.add(CmdOutputModules())
             c_output.add(CmdOutputActive())
-            c_output.add(CmdOutputCreate())
+            cls._cmd_create = CmdBranch("create")
+            c_output.add(cls._cmd_create)
             c_output.add(CmdOutputDestroy())
             c_output.add(CmdOutputOnOff("enable"))
             c_output.add(CmdOutputOnOff("disable"))
@@ -158,6 +159,7 @@ class Outputs(object):
 
     # Register a new output module
     def register(self, module):
+        self._cmd_create.add(CmdOutputCreate(module))
         self._outputs[module.alias] = module
 
     # Create an instance of a module
