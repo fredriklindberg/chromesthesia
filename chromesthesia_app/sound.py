@@ -206,8 +206,16 @@ class SoundAnalyzer(object):
         tre = SoundAnalyzer.Bin(self._fps)
 
         silence_thres = 0.05
-        scale = 128
+
+        scale_avg = filter.RMA(self._fps * 30)
+        scale_avg.add(1)
+        scale_raw = 1
+        scale = scale_raw
+        scale_lock = None
+
         avg_loudness = 0
+        prev_loudness_diff = 0
+        loudness_ack = 0
 
         start = time.time()
         while running.value == 1:
@@ -246,15 +254,41 @@ class SoundAnalyzer(object):
                 mid.level <= silence_thres and \
                 tre.level <= silence_thres
 
-            loudness = ((2 * bass.level) + mid.level +  tre.level) / 4
+            loudness = (bass.level + mid.level +  tre.level) / 3
             avg_loudness = (0.75 * avg_loudness) + (1.0 - 0.75) * loudness
-            peak = bass.level >= 1.0 or mid.level >= 1.0 or tre.level >= 1.0
 
+            # Calculate the scaling factor with a PID-based algorithm with
+            # an approximated moving average of 0.25 as target loudness level.
+            # The purpose of this is to have a rapid increase of the scaling
+            # factor to a useful value but then to keep it at a stable value
+            # versus the flux of the input loudness.
             if not silence:
-                if peak or avg_loudness >= 0.5:
-                    scale = scale * 1.1
-                elif avg_loudness <= 0.05 and scale >= 2:
-                    scale = scale / 1.1
+                diff = avg_loudness - 0.25
+                loudness_ack = loudness_ack + (diff * dt)
+                loudness_d = (diff - prev_loudness_diff) / dt
+                output = 0.5*diff + 0.001*loudness_ack + 0.0001*loudness_d
+                prev_loudness_diff = diff
+                factor = 1 + output
+
+                scale_raw = scale * factor
+
+                # Don't update the scale value at "small enough" diffs
+                if abs(diff) <= 0.1:
+                    scale_lock = True
+                # Use a RMA average filter as scaling for
+                # "almost small" enough values.
+                elif abs(diff) <= 0.25:
+                    scale_lock = False
+                # Otherwise use raw scale factor directly from PID
+                else:
+                    scale_lock = None
+
+                if scale_lock == False:
+                    scale_avg.add(scale_raw)
+                    scale = scale_avg.value()
+                elif scale_lock == None:
+                    scale_avg.add(scale_raw)
+                    scale = scale_raw
 
             pipe.send({"bins" : {
                     "bass" : {
