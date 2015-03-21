@@ -117,6 +117,9 @@ class CmdOutputDestroy(Command):
     def __init__(self):
         super(CmdOutputDestroy, self).__init__()
         self.name = "destroy"
+    def hints(self):
+        inst = self.storage["output"].instances()
+        return list(map(lambda x: x["name"], inst))
     def execute(self):
         if len(self.tokens) != 1:
             raise Command.SyntaxError("Instance name required")
