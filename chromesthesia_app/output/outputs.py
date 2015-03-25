@@ -36,7 +36,7 @@ class CmdOutputList(Command):
         output = self.storage["output"]
         list = ["Outputs:"]
         for o in output.instances():
-            list.append(" {:s} ({:s})".format(o["name"], o["type"]))
+            list.append(" {:s} ({:s})".format(o.name, o.module.alias))
         return list
 
 class CmdOutputActive(Command):
@@ -47,7 +47,7 @@ class CmdOutputActive(Command):
         output = self.storage["output"]
         list = ["Active outputs:"]
         for o in output.active():
-            list.append(" {:s} ({:s})".format(o["name"], o["type"]))
+            list.append(" {:s} ({:s})".format(o.name, o.module.alias))
         return list
 
 class CmdOutputOnOff(Command):
@@ -131,6 +131,30 @@ class CmdOutputDestroy(Command):
         else:
             return ["Failed to destroy output '{:s}'".format(instance_name)]
 
+class OutputInstance(object):
+    def __init__(self, module, name, config):
+        self.instance = module.Output(config)
+        self.module = module
+        self.name = name
+        self._enabled = False
+
+    @property
+    def enabled(self):
+        return self._enabled
+
+    @enabled.setter
+    def enabled(self, value):
+        if value == self._enabled:
+            return
+        self._enabled = value
+        try:
+            if value:
+                self.instance.on_enable()
+            else:
+                self.instance.on_disable()
+        except AttributeError:
+            pass
+
 class Outputs(object):
     _outputs = {}
     _instances = {}
@@ -202,10 +226,10 @@ class Outputs(object):
             config[key] = value
 
         try:
-            instance = module.Output(config)
+            instance = OutputInstance(module, instance_name, config)
         except Exception as e:
             return (False, "Could not create instance: {0}".format(str(e)))
-        self._instances[instance_name] = {"type" : name, "obj" : instance}
+        self._instances[instance_name] = instance
         return (True, instance_name)
 
     # Destroy an instance of a module
@@ -216,32 +240,25 @@ class Outputs(object):
         del self._instances[name]
         return True
 
+    def _update_enabled(self):
+        self._enabled = list(filter(lambda x: x.enabled, self.instances()))
+
     # Enable module
     def enable(self, name):
         if name not in self._instances:
             return False
-        instance = self._instances[name]["obj"]
-        if instance in self._enabled:
-            return True
-        self._enabled.append(instance)
-        try:
-            instance.on_enable()
-        except AttributeError:
-            pass
+        instance = self._instances[name]
+        instance.enabled = True
+        self._update_enabled()
         return True
 
     # Disable module
     def disable(self, name):
         if name not in self._instances:
             return False
-        instance = self._instances[name]["obj"]
-        if instance not in self._enabled:
-            return False
-        self._enabled.remove(instance)
-        try:
-            instance.on_disable()
-        except AttributeError:
-            pass
+        instance = self._instances[name]
+        instance.enabled = False
+        self._update_enabled()
         return True
 
     # Return list of available output modules
@@ -254,19 +271,12 @@ class Outputs(object):
 
     # Return list of outputs
     def instances(self):
-        return map(lambda x: {
-            "name" : x,
-            "type" : self._instances[x]["type"]
-        }, sorted(self._instances.keys()))
+        return list(map(lambda x: self._instances[x],
+            sorted(self._instances.keys())))
 
     # Return list of active outputs
     def active(self):
-        enabled = []
-        for name in sorted(self._instances.keys()):
-            instance = self._instances[name]
-            if instance["obj"] in self._enabled:
-                enabled.append({ "name" : name, "type" : instance["type"]})
-        return enabled
+        return sorted(self._enabled, key=lambda x: x.name)
 
     # On start event
     def start(self):
@@ -276,9 +286,9 @@ class Outputs(object):
             except AttributeError:
                 pass
 
-        for instance in self._enabled:
+        for output in self._enabled:
             try:
-                instance.on_start()
+                output.instance.on_start()
             except AttributeError:
                 pass
 
@@ -296,9 +306,9 @@ class Outputs(object):
             except AttributeError:
                 pass
 
-        for instance in self._enabled:
+        for output in self._enabled:
             try:
-                instance.on_stop()
+                output.instance.on_stop()
             except AttributeError:
                 pass
 
@@ -320,8 +330,8 @@ class Outputs(object):
             except AttributeError:
                 pass
 
-        for instance in self._enabled:
-            instance.update(data, dt)
+        for output in self._enabled:
+            output.instance.update(data, dt)
 
         for helper in self._helpers:
             try:
