@@ -36,7 +36,7 @@ class CmdOutputList(Command):
         output = self.storage["output"]
         list = ["Outputs:"]
         for o in output.instances():
-            list.append(" {:s} ({:s})".format(o.name, o.module.alias))
+            list.append(" {:s} ({:s})".format(o.name, o.output.alias))
         return list
 
 class CmdOutputActive(Command):
@@ -47,7 +47,7 @@ class CmdOutputActive(Command):
         output = self.storage["output"]
         list = ["Active outputs:"]
         for o in output.active():
-            list.append(" {:s} ({:s})".format(o.name, o.module.alias))
+            list.append(" {:s} ({:s})".format(o.name, o.output.alias))
         return list
 
 class CmdOutputOnOff(Command):
@@ -131,10 +131,71 @@ class CmdOutputDestroy(Command):
         else:
             return ["Failed to destroy output '{:s}'".format(instance_name)]
 
-class OutputInstance(object):
-    def __init__(self, module, name, config):
-        self.instance = module.Output(config)
+class OutputModule(object):
+    def __init__(self, module):
         self.module = module
+        self._instances = {}
+
+    @property
+    def alias(self):
+        return self.module.alias
+
+    @property
+    def name(self):
+        return self.module.name
+
+    @property
+    def desc(self):
+        return self.module.desc
+
+    def create(self, user_config):
+        index = len(self._instances.keys())
+        instance_name = "{:s}{:d}".format(self.alias, index)
+        if instance_name in self._instances:
+            return (False, "Instance already exists: {0}".format(instance_name))
+
+        try:
+            module_config = self.module.config
+        except:
+            module_config = {}
+
+        config = {}
+        for key in module_config:
+            try:
+                config[key] = self.module.config[key]["default"]
+            except:
+                pass
+
+        for key in user_config:
+            if key not in config:
+                continue
+            value = user_config[key]
+            if "type" in module_config[key] and \
+                not isinstance(value, module_config[key]["type"]):
+                return (False, "Wrong data type for option '{0}'".format(key))
+            if "values" in module_config[key] and \
+                value not in module_config[key]["values"]:
+                return (False, "Invalid value for '{0}': {1}".format(key, value))
+
+            config[key] = value
+
+        try:
+            instance = OutputInstance(self, instance_name, config)
+        except Exception as e:
+            return (False, "Could not create instance: {0}".format(str(e)))
+        self._instances[instance_name] = instance
+        return (True, instance)
+
+    def destroy(self, name):
+        if name not in self._instances:
+            return False
+        del self._instances[name]
+        return True
+
+class OutputInstance(object):
+    def __init__(self, output, name, config):
+        self.instance = output.module.Output(config)
+        self.output = output
         self.name = name
         self._enabled = False
 
@@ -187,58 +248,28 @@ class Outputs(object):
     # Register a new output module
     def register(self, module):
         self._cmd_create.add(CmdOutputCreate(module))
-        self._outputs[module.alias] = module
+        self._outputs[module.alias] = OutputModule(module)
 
     # Create an instance of a module
     def create(self, name, user_config={}):
         if name not in self._outputs:
             return (False, "No such output module: {0}".format(name))
 
-        index = len(self._instances.keys())
-        instance_name = "{:s}{:d}".format(name, index)
-        if instance_name in self._instances:
-            return (False, "Instance already exists: {0}".format(instance_name))
-
-        module = self._outputs[name]
-        try:
-            module_config = module.config
-        except:
-            module_config = {}
-
-        config = {}
-        for key in module_config:
-            try:
-                config[key] = module.config[key]["default"]
-            except:
-                pass
-
-        for key in user_config:
-            if key not in config:
-                continue
-            value = user_config[key]
-            if "type" in module_config[key] and \
-                not isinstance(value, module_config[key]["type"]):
-                return (False, "Wrong data type for option '{0}'".format(key))
-            if "values" in module_config[key] and \
-                value not in module_config[key]["values"]:
-                return (False, "Invalid value for '{0}': {1}".format(key, value))
-
-            config[key] = value
-
-        try:
-            instance = OutputInstance(module, instance_name, config)
-        except Exception as e:
-            return (False, "Could not create instance: {0}".format(str(e)))
-        self._instances[instance_name] = instance
-        return (True, instance_name)
+        (result, instance) = self._outputs[name].create(user_config)
+        if result:
+            self._instances[instance.name] = instance
+            return (result, instance.name)
+        else:
+            return (result, instance)
 
     # Destroy an instance of a module
     def destroy(self, name):
         if name not in self._instances:
             return False
+        instance = self._instances[name]
         self.disable(name)
         del self._instances[name]
-        return True
+        return instance.output.destroy(name)
 
     def _update_enabled(self):
         self._enabled = list(filter(lambda x: x.enabled, self.instances()))
