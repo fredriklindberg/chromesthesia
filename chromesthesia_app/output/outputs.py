@@ -135,6 +135,7 @@ class OutputModule(object):
     def __init__(self, module):
         self.module = module
         self._instances = {}
+        self._indices = [-1]
 
     @property
     def alias(self):
@@ -149,7 +150,15 @@ class OutputModule(object):
         return self.module.desc
 
     def create(self, user_config):
-        index = len(self._instances.keys())
+        indices = self._indices
+        free = list(filter(lambda x: (indices[x+1] - indices[x]) > 1, range(0, len(indices) - 1)))
+        if not free:
+            index = len(indices) - 1
+        else:
+            index = indices[free[0]] + 1
+        indices.append(index)
+        self._indices = sorted(indices)
+
         instance_name = "{:s}{:d}".format(self.alias, index)
         if instance_name in self._instances:
             return (False, "Instance already exists: {0}".format(instance_name))
@@ -183,12 +192,16 @@ class OutputModule(object):
             instance = OutputInstance(self, instance_name, config)
         except Exception as e:
             return (False, "Could not create instance: {0}".format(str(e)))
-        self._instances[instance_name] = instance
+        self._instances[instance_name] = {
+            "instance" : instance,
+            "index" : index
+        }
         return (True, instance)
 
     def destroy(self, name):
         if name not in self._instances:
             return False
+        self._indices.remove(self._instances[name]["index"])
         del self._instances[name]
         return True
 
