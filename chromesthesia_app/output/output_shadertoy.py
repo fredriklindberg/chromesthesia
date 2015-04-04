@@ -358,7 +358,7 @@ class Output(object):
 # Generate a (pretty bad) test pattern for debugging
 if __name__ == '__main__':
     fps = 30
-    o = Output()
+    o = Output({})
     o.on_start()
 
     data = {
