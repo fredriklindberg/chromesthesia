@@ -119,6 +119,17 @@ class ConsoleProxy(object):
         self._write.send({"type" : "parser", "line" : line})
         return self._write.recv()
 
+class CmdHelp(Command):
+    def __init__(self):
+        super(CmdHelp, self).__init__()
+        self.name = "help"
+    def execute(self):
+        cmds = command_root.commands
+        return [
+            "chromesthesia {0}".format(__version__),
+            "",
+            "Begin with any of the following commands " + ", ".join(cmds)
+        ]
 
 def main(args):
     print("This is chromesthesia {0}".format(__version__))
@@ -135,6 +146,7 @@ def main(args):
     cons.set_prompt("chromesthesia> ")
     cons.start()
 
+    command_root.add(CmdHelp())
     command_root.add(CmdQuit("exit", [running, cons.running]))
     command_root.add(CmdQuit("quit", [running, cons.running]))
     command_root.add(CmdStart(sp))

@@ -45,6 +45,10 @@ class Command(object):
 
         return True
 
+    @property
+    def commands(self):
+        return list(self._commands.keys())
+
     def _get_command(self):
         if not self.parent:
             return ""
