@@ -28,7 +28,7 @@ class Command(object):
 
     class SyntaxError(Exception):
         def __init__(self, msg='Syntax error'):
-            self.message = msg
+            self.strerror = msg
 
     storage = {}
     tokens = []

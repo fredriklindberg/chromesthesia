@@ -108,7 +108,7 @@ class ConsoleProxy(object):
                 else:
                     result = "No such command '{:s}'".format(data["line"])
             except Command.SyntaxError as e:
-                result = e.message
+                result = str(e)
         else:
             result = ""
 
