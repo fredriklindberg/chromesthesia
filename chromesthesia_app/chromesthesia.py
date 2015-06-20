@@ -102,8 +102,11 @@ class ConsoleProxy(object):
         elif data["type"] == "parser":
             try:
                 result = command_root.parse(data["line"])
-            except Command.NotFound:
-                result = "No such command '{:s}'".format(data["line"])
+            except Command.NotFound as e:
+                if str(e) != "":
+                    result = str(e)
+                else:
+                    result = "No such command '{:s}'".format(data["line"])
             except Command.SyntaxError as e:
                 result = e.message
         else:

@@ -22,7 +22,9 @@ except:
 
 class Command(object):
     class NotFound(Exception):
-        pass
+        def __init__(self, msg=None):
+            if msg != None:
+                self.strerror = msg
 
     class SyntaxError(Exception):
         def __init__(self, msg='Syntax error'):
