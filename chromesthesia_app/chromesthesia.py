@@ -22,6 +22,7 @@ from multiprocessing import Pipe
 from select import select
 from sound import SoundAnalyzer
 from command import Command, command_root
+from settings import Settings, CmdSet, CmdGet
 
 from version import __version__
 
@@ -137,9 +138,13 @@ class CmdHelp(Command):
 def main(args):
     print("This is chromesthesia {0}".format(__version__))
 
+    settings = Settings()
+    settings.create("fps", 60)
+    settings.create("freq", 44100)
+
     running = Event()
 
-    sa = SoundAnalyzer(44100, 60)
+    sa = SoundAnalyzer(settings["freq"], settings["fps"])
     sp = SoundProxy(sa)
 
     cp = ConsoleProxy()
@@ -154,6 +159,8 @@ def main(args):
     command_root.add(CmdQuit("quit", [running, cons.running]))
     command_root.add(CmdStart(sp))
     command_root.add(CmdStop(sp))
+    command_root.add(CmdSet())
+    command_root.add(CmdGet())
 
     rlist = [sp, cp]
     running.set()
