@@ -51,22 +51,43 @@ class CmdStop(Command):
 
 class SoundProxy(object):
     def __init__(self, sa):
+        self.running = False
+        self._sa = None
         self.outputs = output.Outputs()
         self.sa = sa
 
+    @property
+    def sa(self):
+        return self._sa
+    @sa.setter
+    def sa(self, value):
+        was_running = self.running
+        self.close()
+        self._sa = value
+        if was_running:
+            self.start()
+
     def start(self):
+        if self.sa == None:
+            return
         self.outputs.start()
-        self.sa.start()
+        self._sa.start()
+        self.running = True
 
     def stop(self):
+        if self.sa == None:
+            return
         self.sa.stop()
         self.outputs.stop()
         try:
             self.sa.data()
         except:
             pass
+        self.running = False
 
     def close(self):
+        if self.sa == None:
+            return
         self.sa.stop()
         self.outputs.stop()
         self.sa.close()
@@ -140,10 +161,15 @@ def main(config):
     print("This is chromesthesia {0}".format(__version__))
 
     logger = log.Logger()
+    sp = SoundProxy(None)
 
     settings = Settings()
-    settings.create("fps", 60)
-    settings.create("freq", 44100)
+
+    def reinit_sa(key, value):
+        sp.sa = SoundAnalyzer(settings["freq"], settings["fps"])
+    settings.create("fps", 60, reinit_sa)
+    settings.create("freq", 44100, reinit_sa)
+    reinit_sa(None, None)
 
     def debug(key, value):
         logger.del_level(log.DEBUG | log.DEBUG2)
@@ -154,9 +180,6 @@ def main(config):
     settings.create("debug", config.verbose, debug)
 
     running = Event()
-
-    sa = SoundAnalyzer(settings["freq"], settings["fps"])
-    sp = SoundProxy(sa)
 
     cp = ConsoleProxy()
     cons = console.Console()
