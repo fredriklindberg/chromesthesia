@@ -15,6 +15,7 @@
 
 import sys
 import readline
+import rlcompleter
 from threading import Thread, Event
 from command import Command, command_root
 
@@ -45,7 +46,10 @@ class Console(Thread):
             return input(self._prompt)
 
     def run(self):
-        readline.parse_and_bind('tab: complete')
+        if 'libedit' in readline.__doc__:
+            readline.parse_and_bind("bind ^I rl_complete")
+        else:
+            readline.parse_and_bind('tab: complete')
         readline.set_completer(self._complete)
         self.running.set()
         while self.running.is_set():
