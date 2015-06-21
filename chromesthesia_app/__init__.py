@@ -15,8 +15,25 @@
 
 import sys
 import os
+import argparse
 
 sys.path.append(os.path.dirname(__file__))
+import log
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-v", action="append_const",
+                    dest="verbose", const=True, default=[],
+                    help="Verbose, specify twice for more verbosity")
+config = parser.parse_args()
+config.verbose = len(config.verbose)
+config.verbose = config.verbose if config.verbose <=2 else 2
+
+# Set debug level early to catch package initialization outputs
+if config.verbose >= 1:
+    log.Logger().add_level(log.DEBUG)
+if config.verbose >= 2:
+    log.Logger().add_level(log.DEBUG2)
+
 import chromesthesia
 
 from ._version import get_versions

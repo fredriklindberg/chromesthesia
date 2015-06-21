@@ -136,7 +136,7 @@ class CmdHelp(Command):
             "Begin with any of the following commands " + ", ".join(cmds)
         ]
 
-def main(args):
+def main(config):
     print("This is chromesthesia {0}".format(__version__))
 
     logger = log.Logger()
@@ -151,7 +151,7 @@ def main(args):
             logger.add_level(log.DEBUG)
         if value >= 2:
             logger.add_level(log.DEBUG2)
-    settings.create("debug", 0, debug)
+    settings.create("debug", config.verbose, debug)
 
     running = Event()
 

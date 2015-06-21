@@ -26,4 +26,4 @@ import sys
 import chromesthesia_app as app
 
 if __name__ == '__main__':
-    sys.exit(app.chromesthesia.main(sys.argv))
+    sys.exit(app.chromesthesia.main(app.config))
