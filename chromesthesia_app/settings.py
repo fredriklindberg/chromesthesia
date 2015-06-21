@@ -27,18 +27,22 @@ def singleton(cls):
 class Settings(object):
     _settings = {}
 
-    def create(self, key, value=""):
-        self._settings[key] = value
+    def create(self, key, value="", callback=None):
+        self._settings[key] = (value, callback)
 
     def __getitem__(self, key):
         if key in self._settings:
-            return self._settings[key]
+            (value, _) = self._settings[key]
+            return value
         else:
             raise AttributeError("No such setting " + key)
 
     def __setitem__(self, key, val):
         if key in self._settings:
-            self._settings[key] = val
+            (_, callback) = self._settings[key]
+            self._settings[key] = (val, callback)
+            if callback != None:
+                callback(key, val)
         else:
             raise AttributeError("No such setting " + key)
 
