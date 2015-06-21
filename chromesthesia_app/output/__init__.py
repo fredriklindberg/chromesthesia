@@ -19,6 +19,7 @@ import sys
 import importlib
 
 from .outputs import Outputs
+import log
 
 sys.path.append(os.path.dirname(__file__))
 
@@ -32,7 +33,8 @@ for module in modules:
         module = importlib.import_module(name)
         outputs.register(module)
         __all__.append(name)
-    except:
+    except Exception as e:
+        log.Logger().debug("Failed to load {0}: {1}".format(name, str(e)))
         pass
 
 import helpers
