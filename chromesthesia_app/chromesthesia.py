@@ -17,6 +17,7 @@
 import sys
 import output
 import console
+import log
 from threading import Event
 from multiprocessing import Pipe
 from select import select
@@ -138,9 +139,19 @@ class CmdHelp(Command):
 def main(args):
     print("This is chromesthesia {0}".format(__version__))
 
+    logger = log.Logger()
+
     settings = Settings()
     settings.create("fps", 60)
     settings.create("freq", 44100)
+
+    def debug(key, value):
+        logger.del_level(log.DEBUG | log.DEBUG2)
+        if value >= 1:
+            logger.add_level(log.DEBUG)
+        if value >= 2:
+            logger.add_level(log.DEBUG2)
+    settings.create("debug", 0, debug)
 
     running = Event()
 
